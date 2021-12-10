@@ -1,0 +1,25 @@
+kind: containerapp
+location: northeurope
+name: mycontainerapp
+resourceGroup: myresourcegroup
+type: Microsoft.Web/containerApps
+tags:
+    tagname: value
+properties:
+    kubeEnvironmentId: /subscriptions/mysubscription/resourceGroups/myresourcegroup/providers/Microsoft.Web/kubeEnvironments/myenvironment
+    configuration:
+        activeRevisionsMode: single
+        ingress:
+            external: true
+            allowInsecure: false
+            targetPort: 3306
+            transport: auto
+    template:
+        containers:
+        - image: ghost:latest
+          name: ghost
+          env:
+          - name: NODE_ENV
+            value: development
+        scale:
+            minReplicas: 1

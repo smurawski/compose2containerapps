@@ -1,0 +1,38 @@
+kind: containerapp
+location: northeurope
+name: mycontainerapp
+resourceGroup: myresourcegroup
+type: Microsoft.Web/containerApps
+tags:
+    tagname: value
+properties:
+    kubeEnvironmentId: /subscriptions/mysubscription/resourceGroups/myresourcegroup/providers/Microsoft.Web/kubeEnvironments/myenvironment
+    configuration:
+        activeRevisionsMode: multiple
+        secrets:
+        - name: mysecret
+          value: thisismysecret
+        ingress:
+            external: true
+            allowInsecure: false
+            targetPort: 80
+            traffic:
+            - latestRevision: true
+              weight: 100
+            transport: auto
+    template:
+        revisionSuffix: myrevision
+        containers:
+        - image: nginx
+          name: nginx
+          env:
+          - name: HTTP_PORT
+            value: 80
+          - name: secret_name
+            secretRef: mysecret
+          resources:
+              cpu: 0.5
+              memory: 1Gi
+        scale:
+            minReplicas: 1
+            maxReplicas: 1
