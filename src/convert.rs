@@ -1,7 +1,7 @@
 use crate::compose::{Compose, Ports, Service};
 use crate::containerapps::{
     Configuration, Container, ContainerAppConfig, EnvironmentConfiguration, IngressConfiguration,
-    SecretsConfiguration, Template,
+    Properties, RevisionMode, ScaleConfiguration, SecretsConfiguration, Template,
 };
 use anyhow::Result;
 use std::collections::HashMap;
@@ -10,28 +10,39 @@ pub fn convert_to_containerapps(
     compose_file: Compose,
     cli_values: HashMap<&str, String>,
 ) -> Result<ContainerAppConfig> {
-    let mut config = ContainerAppConfig::default();
-
-    config.name = cli_values["name"].to_owned();
-    config.resource_group = cli_values["resourceGroup"].to_owned();
-    config.location = cli_values["location"].to_owned();
-
-    config.properties.kube_environment_id = cli_values["kubeEnvironmentId"].to_owned();
-    config.properties.configuration = get_configuration_from_compose(&compose_file)?;
-    config.properties.template = get_template_from_compose(&compose_file)?;
+    let config = ContainerAppConfig {
+        kind: "containerapp".to_string(),
+        name: cli_values["name"].to_owned(),
+        resource_group: cli_values["resourceGroup"].to_owned(),
+        location: cli_values["location"].to_owned(),
+        resource_type: "Microsoft.Web/containerApps".to_string(),
+        tags: None,
+        properties: get_properties(cli_values["kubeEnvironmentId"].to_owned(), &compose_file)?,
+    };
 
     Ok(config)
+}
+
+fn get_properties(kube_environment: String, compose_file: &Compose) -> Result<Properties> {
+    let props = Properties {
+        kube_environment_id: kube_environment,
+        configuration: get_configuration_from_compose(compose_file)?,
+        template: get_template_from_compose(compose_file)?,
+    };
+    Ok(props)
 }
 
 fn get_configuration_from_compose(compose_file: &Compose) -> Result<Configuration> {
-    let mut config = Configuration::default();
-    config.secrets = get_secrets_from_compose(compose_file)?;
-    config.ingress = get_ingress_from_compose(compose_file)?;
+    let config = Configuration {
+        secrets: get_secrets_from_compose(compose_file)?,
+        ingress: get_ingress_from_compose(compose_file)?,
+        active_revisions_mode: RevisionMode::default(),
+    };
     Ok(config)
 }
 
-fn get_secrets_from_compose(compose_file: &Compose) -> Result<Vec<SecretsConfiguration>> {
-    let mut secrets = Vec::new();
+fn get_secrets_from_compose(_compose_file: &Compose) -> Result<Vec<SecretsConfiguration>> {
+    let secrets = Vec::new();
     Ok(secrets)
 }
 
@@ -46,7 +57,6 @@ fn get_ingress_from_compose(compose_file: &Compose) -> Result<IngressConfigurati
     ingress.target_port = match port.container_ports {
         Ports::Port(p) => Some(p),
         Ports::Range(low, _high) => Some(low),
-        _ => Some(80),
     };
 
     Ok(ingress)
@@ -54,17 +64,19 @@ fn get_ingress_from_compose(compose_file: &Compose) -> Result<IngressConfigurati
 
 fn get_public_services_from_compose(compose_file: &Compose) -> Vec<Service> {
     let compose = compose_file.clone();
-    let services = compose
+    compose
         .services
         .into_values()
         .filter(|s| !s.ports.is_empty())
-        .collect();
-    services
+        .collect()
 }
 
 fn get_template_from_compose(compose_file: &Compose) -> Result<Template> {
-    let mut template = Template::default();
-    template.containers = get_containers_from_compose(compose_file);
+    let template = Template {
+        containers: get_containers_from_compose(compose_file),
+        revision_suffix: None,
+        scale: ScaleConfiguration::default(),
+    };
     Ok(template)
 }
 
@@ -92,13 +104,13 @@ fn get_container_from_service(service: Service) -> Result<Container> {
 
     if !service.environment.is_empty() {
         for (key, wrapped_value) in service.environment.into_iter() {
-            let value = match wrapped_value.value() {
+            let new_value = match wrapped_value.value() {
                 Ok(v) => Some(v.to_string()),
                 _ => None,
             };
             let env = EnvironmentConfiguration {
                 name: key,
-                value: value,
+                value: new_value,
                 secret_ref: None,
             };
             container.env.push(env);
