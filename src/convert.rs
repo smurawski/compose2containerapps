@@ -45,8 +45,8 @@ fn get_ingress_from_compose(compose_file: &Compose) -> Result<IngressConfigurati
     ingress.allow_insecure = false;
     ingress.target_port = match port.container_ports {
         Ports::Port(p) => Some(p),
-        Ports::Range(low,_high) => Some(low),
-        _ => Some(80)
+        Ports::Range(low, _high) => Some(low),
+        _ => Some(80),
     };
 
     Ok(ingress)
@@ -54,7 +54,8 @@ fn get_ingress_from_compose(compose_file: &Compose) -> Result<IngressConfigurati
 
 fn get_public_services_from_compose(compose_file: &Compose) -> Vec<Service> {
     let compose = compose_file.clone();
-    let services = compose.services
+    let services = compose
+        .services
         .into_values()
         .filter(|s| !s.ports.is_empty())
         .collect();
@@ -93,12 +94,12 @@ fn get_container_from_service(service: Service) -> Result<Container> {
         for (key, wrapped_value) in service.environment.into_iter() {
             let value = match wrapped_value.value() {
                 Ok(v) => Some(v.to_string()),
-                _ => None
-            } ;
+                _ => None,
+            };
             let env = EnvironmentConfiguration {
                 name: key,
                 value: value,
-                secret_ref: None 
+                secret_ref: None,
             };
             container.env.push(env);
         }
