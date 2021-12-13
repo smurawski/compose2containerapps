@@ -26,13 +26,13 @@ jobs:
           command: build
           args: --release
 
-      - run: mv target/release/compose2containerapps target/release/compose2containerapps-linux
+      - run: mv target/release/compose2containerapp target/release/compose2containerapp-linux
 
       - name: Upload cli
         uses: actions/upload-artifact@v2
         with:
           name: compose2containerappbuild
-          path: target/release/compose2containerapps-linux
+          path: target/release/compose2containerapp-linux
 
   macos:
     name: Build
@@ -54,13 +54,13 @@ jobs:
           command: build
           args: --release
 
-      - run: mv target/release/compose2containerapps target/release/compose2containerapps-macos
+      - run: mv target/release/compose2containerapp target/release/compose2containerapp-macos
 
       - name: Upload cli
         uses: actions/upload-artifact@v2
         with:
           name: compose2containerappbuild
-          path: target/release/compose2containerapps-macos
+          path: target/release/compose2containerapp-macos
 
   windows:
     name: Build
@@ -86,7 +86,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: compose2containerappbuild
-          path: target/release/compose2containerapps.exe
+          path: target/release/compose2containerapp.exe
 
   publish:
     name: Publish Release
@@ -101,6 +101,6 @@ jobs:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
           files: |
-            compose2containerapps.exe
-            compose2containerapps-linux
-            compose2containerapps-macos
+            compose2containerapp.exe
+            compose2containerapp-linux
+            compose2containerapp-macos
