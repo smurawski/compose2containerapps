@@ -1,7 +1,7 @@
 use clap::{App, Arg};
 
 pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
-    App::new("demo")
+    App::new("compose2containerapps")
         .version(&*version)
         .author("Steven Murawski <steven.murawski@microsoft.com>")
         .about("Converts Docker Compose files to Azure ContainerApps yaml configuration files")
