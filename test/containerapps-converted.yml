@@ -12,7 +12,7 @@ properties:
         ingress:
             external: true
             allowInsecure: false
-            targetPort: 3306
+            targetPort: 2368
             transport: auto
     template:
         containers:

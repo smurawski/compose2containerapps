@@ -4,8 +4,8 @@ services:
     image: ghost:latest
     container_name: ghost
     hostname: ghost
-    expose:
-    - "3306"
+    ports:
+      - 2368
     environment: # this section can be commented to start in dev mode by default
       - NODE_ENV=development # set either production or development, then it will load the respective config
     restart: always
