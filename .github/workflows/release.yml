@@ -1,0 +1,104 @@
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  linux:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Run cargo build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release
+
+      - run: mv target/release/compose2containerapps target/release/compose2containerapps-linux
+
+      - name: Upload cli
+        uses: actions/upload-artifact@v2
+        with:
+          name: compose2containerappbuild
+          path: target/release/compose2containerapps-linux
+
+  macos:
+    name: Build
+    runs-on: macos-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Run cargo build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release
+
+      - run: mv target/release/compose2containerapps target/release/compose2containerapps-macos
+
+      - name: Upload cli
+        uses: actions/upload-artifact@v2
+        with:
+          name: compose2containerappbuild
+          path: target/release/compose2containerapps-macos
+
+  windows:
+    name: Build
+    runs-on: windows-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Run cargo build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release
+
+      - name: Upload cli
+        uses: actions/upload-artifact@v2
+        with:
+          name: compose2containerappbuild
+          path: target/release/compose2containerapps.exe
+
+  publish:
+    name: Publish Release
+    runs-on: ubuntu-latest
+    needs: [linux, macos, windows]
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: compose2containerappbuild
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: false
+          files: |
+            compose2containerapps.exe
+            compose2containerapps-linux
+            compose2containerapps-macos
