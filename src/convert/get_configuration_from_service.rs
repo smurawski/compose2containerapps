@@ -10,6 +10,7 @@ pub fn get_configuration_from_service(service: &Service) -> Result<Configuration
         secrets: get_secrets_from_service(service)?,
         ingress: get_ingress_from_service(service)?,
         active_revisions_mode: RevisionMode::default(),
+        registries: Vec::new(),
     };
     Ok(config)
 }

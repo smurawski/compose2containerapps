@@ -1,6 +1,6 @@
 [package]
 name = "compose2containerapp"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -13,3 +13,5 @@ clap = "*"
 compose_yml = { git = "https://github.com/smurawski/compose_yml", branch = "v3" }
 console = "*"
 dialoguer = { version = "*", features = ["fuzzy-select"] }
+log = "*"
+env_logger = "*"
