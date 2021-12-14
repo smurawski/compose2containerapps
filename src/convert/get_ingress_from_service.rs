@@ -1,18 +1,30 @@
 use crate::compose::{Ports, Service};
 use crate::containerapps::IngressConfiguration;
 use anyhow::Result;
+use log::{debug, trace, warn};
 
 pub fn get_ingress_from_service(service: &Service) -> Result<IngressConfiguration> {
+    trace!("Creating the ingress configuration.");
     let mut ingress = IngressConfiguration::default();
     if !service.ports.is_empty() {
+        debug!("Service had ports defined.");
         let ports = service.ports.clone();
         let port = ports[0].value()?;
         ingress.external = true;
         ingress.allow_insecure = false;
         ingress.target_port = match port.container_ports {
-            Ports::Port(p) => Some(p),
-            Ports::Range(low, _high) => Some(low),
+            Ports::Port(p) => {
+                debug!("Found an existing port: {}", &p);
+                Some(p)
+            }
+            Ports::Range(low, high) => {
+                debug!("Found an existing port range: {} - {}", &low, &high);
+                warn!("Defaulting to use the lower port, but I should really prompt here.");
+                Some(low)
+            }
         };
+    } else if !service.expose.is_empty() {
+        debug!("Service had expose defined.");
     }
 
     Ok(ingress)
