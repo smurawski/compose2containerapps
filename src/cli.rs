@@ -13,9 +13,9 @@ pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
         )
         .arg(
             Arg::with_name("OUTPUT")
-                .help("Path to write the Azure ContainerApps yaml configuration file.")
+                .help("Base file name to write the Azure ContainerApps yaml configuration files.  Output file name will be prefixed with the service name.")
                 .index(2)
-                .default_value("./containerapps.yml"),
+                .default_value("containerapps.yml"),
         )
         .arg(
             Arg::with_name("kubeEnvironmentId")

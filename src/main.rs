@@ -18,8 +18,14 @@ fn main() -> Result<()> {
         option_env!("BUILD_BUILDID").unwrap_or("0")
     );
     let matches = get_app_cli(&version).get_matches();
-    let compose_file_path = Path::new(matches.value_of("INPUT").unwrap());
-    let containerapps_file_path = Path::new(matches.value_of("OUTPUT").unwrap());
+    let compose_file_path = match matches.value_of("INPUT") {
+        Some(p) => Path::new(p),
+        None => panic!("Since there is a default value, we should never get here."),
+    };
+    let containerapps_file_path = match matches.value_of("OUTPUT") {
+        Some(p) => p,
+        None => panic!("Since there is a default value, we should never get here."),
+    };
     let mut map = HashMap::new();
     map.insert("name", matches.value_of("name").unwrap().to_string());
     map.insert(
@@ -35,6 +41,12 @@ fn main() -> Result<()> {
         matches.value_of("resourceGroup").unwrap().to_string(),
     );
     let compose_file = read_compose_file(compose_file_path)?;
-    let container_file = convert_to_containerapps(compose_file, map)?;
-    write_to_containerapps_file(containerapps_file_path, &container_file)
+    for (service_name, service) in compose_file.services {
+        let container_file = convert_to_containerapps(service, &map)?;
+        let new_path = format!("{}-{}", service_name, containerapps_file_path);
+        let per_service_containerapps_file_path = Path::new(&new_path);
+
+        write_to_containerapps_file(per_service_containerapps_file_path, &container_file)?;
+    }
+    Ok(())
 }

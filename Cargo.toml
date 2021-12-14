@@ -11,3 +11,5 @@ serde_yaml = "*"
 anyhow = "*"
 clap = "*"
 compose_yml = { git = "https://github.com/smurawski/compose_yml", branch = "v3" }
+console = "*"
+dialoguer = { version = "*", features = ["fuzzy-select"] }

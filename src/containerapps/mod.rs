@@ -15,7 +15,8 @@ pub use template::*;
 
 pub fn write_to_containerapps_file(file_path: &Path, config: &ContainerAppConfig) -> Result<()> {
     let output_content = serde_yaml::to_string(config)?;
-    let mut file = File::create(file_path).expect("Failed to create the output file.");
+    let mut file = File::create(file_path)
+        .unwrap_or_else(|_| panic!("Failed to create the output file - {:?}.", file_path));
     file.write_all(output_content.into_bytes().as_ref())?;
     Ok(())
 }
