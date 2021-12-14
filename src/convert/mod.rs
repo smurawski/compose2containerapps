@@ -1,130 +1,35 @@
-use crate::compose::{Compose, Ports, Service};
-use crate::containerapps::{
-    Configuration, Container, ContainerAppConfig, EnvironmentConfiguration, IngressConfiguration,
-    Properties, RevisionMode, ScaleConfiguration, SecretsConfiguration, Template,
-};
-use anyhow::Result;
-use std::collections::HashMap;
+mod convert_to_containerapps;
+mod get_configuration_from_compose;
+mod get_container_from_service;
+mod get_containers_from_compose;
+mod get_ingress_from_compose;
+mod get_properties;
+mod get_public_services_from_compose;
+mod get_secrets_from_compose;
+mod get_template_from_compose;
+mod read_containerapps_file;
+mod read_docker_compose_file;
 
-pub fn convert_to_containerapps(
-    compose_file: Compose,
-    cli_values: HashMap<&str, String>,
-) -> Result<ContainerAppConfig> {
-    let config = ContainerAppConfig {
-        kind: "containerapp".to_string(),
-        name: cli_values["name"].to_owned(),
-        resource_group: cli_values["resourceGroup"].to_owned(),
-        location: cli_values["location"].to_owned(),
-        resource_type: "Microsoft.Web/containerApps".to_string(),
-        tags: None,
-        properties: get_properties(cli_values["kubeEnvironmentId"].to_owned(), &compose_file)?,
-    };
-
-    Ok(config)
-}
-
-fn get_properties(kube_environment: String, compose_file: &Compose) -> Result<Properties> {
-    let props = Properties {
-        kube_environment_id: kube_environment,
-        configuration: get_configuration_from_compose(compose_file)?,
-        template: get_template_from_compose(compose_file)?,
-    };
-    Ok(props)
-}
-
-fn get_configuration_from_compose(compose_file: &Compose) -> Result<Configuration> {
-    let config = Configuration {
-        secrets: get_secrets_from_compose(compose_file)?,
-        ingress: get_ingress_from_compose(compose_file)?,
-        active_revisions_mode: RevisionMode::default(),
-    };
-    Ok(config)
-}
-
-fn get_secrets_from_compose(_compose_file: &Compose) -> Result<Vec<SecretsConfiguration>> {
-    let secrets = Vec::new();
-    Ok(secrets)
-}
-
-fn get_ingress_from_compose(compose_file: &Compose) -> Result<IngressConfiguration> {
-    let mut ingress = IngressConfiguration::default();
-    let services = get_public_services_from_compose(compose_file);
-    let ports = services[0].ports.clone();
-    let port = ports[0].value()?;
-
-    ingress.external = true;
-    ingress.allow_insecure = false;
-    ingress.target_port = match port.container_ports {
-        Ports::Port(p) => Some(p),
-        Ports::Range(low, _high) => Some(low),
-    };
-
-    Ok(ingress)
-}
-
-fn get_public_services_from_compose(compose_file: &Compose) -> Vec<Service> {
-    let compose = compose_file.clone();
-    compose
-        .services
-        .into_values()
-        .filter(|s| !s.ports.is_empty())
-        .collect()
-}
-
-fn get_template_from_compose(compose_file: &Compose) -> Result<Template> {
-    let template = Template {
-        containers: get_containers_from_compose(compose_file),
-        revision_suffix: None,
-        scale: ScaleConfiguration::default(),
-    };
-    Ok(template)
-}
-
-fn get_containers_from_compose(compose_file: &Compose) -> Vec<Container> {
-    let mut containers = Vec::new();
-    let compose = compose_file.clone();
-
-    for service in compose.services.into_values() {
-        if let Ok(container) = get_container_from_service(service) {
-            containers.push(container);
-        }
-    }
-    containers
-}
-
-fn get_container_from_service(service: Service) -> Result<Container> {
-    let mut container = Container::default();
-    if let Some(image) = service.image {
-        container.image = image.value()?.to_string();
-    }
-
-    if let Some(name) = service.container_name {
-        container.name = Some(name.value()?.to_string());
-    }
-
-    if !service.environment.is_empty() {
-        for (key, wrapped_value) in service.environment.into_iter() {
-            let new_value = match wrapped_value.value() {
-                Ok(v) => Some(v.to_string()),
-                _ => None,
-            };
-            let env = EnvironmentConfiguration {
-                name: key,
-                value: new_value,
-                secret_ref: None,
-            };
-            container.env.push(env);
-        }
-    }
-    Ok(container)
-}
+pub use convert_to_containerapps::*;
+pub use get_configuration_from_compose::*;
+pub use get_container_from_service::*;
+pub use get_containers_from_compose::*;
+pub use get_ingress_from_compose::*;
+pub use get_properties::*;
+pub use get_public_services_from_compose::*;
+pub use get_secrets_from_compose::*;
+pub use get_template_from_compose::*;
+pub use read_containerapps_file::*;
+pub use read_docker_compose_file::*;
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::compose::*;
     use crate::containerapps::*;
     use std::fs::File;
     use std::path::Path;
+    use std::collections::HashMap;
 
     fn read_docker_compose_file() -> Compose {
         let path = Path::new("test/docker-compose.yml");
