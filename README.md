@@ -10,8 +10,8 @@ There are lots of things that the Compose file can express that are not supporte
 
 Things to figure out:
 
-- [ ] A compose file can describe multiple containers and their connections.  ContainerApps has two options, multiple containers on the same host (basically a k8s pod) or separate ContainerApps in the same environment with an HTTP ingress between them.
-- [ ] A compose file can `expose` multiple ports or ranges (internal ingress) or define multiple `ports` or ranges (external ingress).  ContainerApps exposes one port either internally or externally (exclusive) per ContainerApp.
+- [ ] A compose file can describe multiple containers and their connections.  ContainerApps has two options, multiple containers on the same host (basically a k8s pod) or separate ContainerApps in the same environment with an HTTP ingress between them. Currently, it creates separate ContainerApps deployments for each service defined.
+- [X] A compose file can `expose` multiple ports or ranges (internal ingress) or define multiple `ports` or ranges (external ingress).  ContainerApps exposes one port either internally or externally (exclusive) per ContainerApp.
 - [ ] Something else?
 
 ## Building The App
@@ -25,7 +25,7 @@ This app should build with minimal dependencies.  It's been tested with Rust 1.5
 The application has four mandatory parameters and two optional ones (that have default values).
 
 ```
-compose2containerapps 0.1.0.0
+compose2containerapps v0.2.1
 Steven Murawski <steven.murawski@microsoft.com>
 Converts Docker Compose files to Azure ContainerApps yaml configuration files
 
@@ -44,5 +44,6 @@ OPTIONS:
 
 ARGS:
     <INPUT>     Path to read the Docker Compose yaml configuration file. [default: ./docker-compose.yml]
-    <OUTPUT>    Path to write the Azure ContainerApps yaml configuration file. [default: ./containerapps.yml]
+    <OUTPUT>    Base file name to write the Azure ContainerApps yaml configuration files.  Output file name will be
+                prefixed with the service name. [default: containerapps.yml]
 ```
