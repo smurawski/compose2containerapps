@@ -12,11 +12,7 @@ use std::collections::HashMap;
 use std::path::Path;
 
 fn main() -> Result<()> {
-    let version = format!(
-        "{}.{}",
-        env!("CARGO_PKG_VERSION"),
-        option_env!("BUILD_BUILDID").unwrap_or("0")
-    );
+    let version = format!("v{}", env!("CARGO_PKG_VERSION"));
     let matches = get_app_cli(&version).get_matches();
     let compose_file_path = match matches.value_of("INPUT") {
         Some(p) => Path::new(p),
