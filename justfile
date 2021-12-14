@@ -12,3 +12,8 @@ check:
 test:
     cargo test
 
+publish:
+    $Version = ((cargo run -- -V) -split ' ')[1]
+    git tag $Version
+    git push origin $Version
+
