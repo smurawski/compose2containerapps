@@ -3,8 +3,6 @@ location: northeurope
 name: mycontainerapp
 resourceGroup: myresourcegroup
 type: Microsoft.Web/containerApps
-tags:
-    tagname: value
 properties:
     kubeEnvironmentId: /subscriptions/mysubscription/resourceGroups/myresourcegroup/providers/Microsoft.Web/kubeEnvironments/myenvironment
     configuration:
@@ -16,7 +14,7 @@ properties:
             transport: auto
     template:
         containers:
-        - image: ghost:latest
+        - image: "ghost:latest"
           name: ghost
           env:
           - name: NODE_ENV
