@@ -18,7 +18,7 @@ pub struct IngressConfiguration {
 impl Default for IngressConfiguration {
     fn default() -> IngressConfiguration {
         IngressConfiguration {
-            external: true,
+            external: false,
             allow_insecure: false,
             target_port: Some(80),
             traffic: Vec::new(),

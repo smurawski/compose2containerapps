@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:5.7
+    restart: always
+    expose:
+      - 3306
+    environment:
+      # Fetching the password from the application settings
+      MYSQL_ROOT_PASSWORD: ${DATABASE_ROOT_PASSWORD}
+      MYSQL_DATABASE: ghost
+      MYSQL_USER: ghost
+      MYSQL_PASSWORD: ${DATABASE_PASSWORD}
+
+  ghost:
+    image: jldeen/ghost:latest
+    depends_on:
+      - db
+    restart: always
+    ports:
+      - 8080:2368
+    environment:
+      # See https://docs.ghost.org/docs/config#section-running-ghost-with-config-env-variables
+      database__client: mysql
+      database__connection__host: db
+      database__connection__user: root
+      database__connection__password: ${DATABASE_ROOT_PASSWORD}
+      database__connection__database: ghost
