@@ -13,6 +13,7 @@ use containerapps::write_to_containerapps_file;
 use convert::convert_to_containerapps;
 // Possible log options are (in order)
 // error, warn, info, debug, trace
+use dialoguer::Input;
 use log::{debug, trace};
 use std::collections::HashMap;
 use std::path::Path;
@@ -23,14 +24,14 @@ lazy_static! {
 }
 
 fn main() -> Result<()> {
-    let map = get_cli_argument_value();
+    let map = get_cli_argument_value()?;
     env_logger::init();
 
     let compose_file = get_docker_compose_file(&map)?;
     convert_services_to_containerapps(map, compose_file)
 }
 
-fn get_cli_argument_value() -> HashMap<&'static str, String> {
+fn get_cli_argument_value() -> Result<HashMap<&'static str, String>> {
     trace!("Starting evaluation of CLI values.");
     let matches = get_app_cli(&VERSION).get_matches();
     let mut map = HashMap::new();
@@ -45,6 +46,11 @@ fn get_cli_argument_value() -> HashMap<&'static str, String> {
     if let Some(location) = matches.value_of("location") {
         debug!("ContainerApps location set to {}.", location);
         map.insert("location", location.to_string());
+    } else {
+        let location: String = Input::new()
+            .with_prompt("Please supply an Azure region for the ContainerApps instance.")
+            .interact_text()?;
+        map.insert("location", location);
     };
     if let Some(kube_environment_id) = matches.value_of("kubeEnvironmentId") {
         debug!(
@@ -52,13 +58,25 @@ fn get_cli_argument_value() -> HashMap<&'static str, String> {
             kube_environment_id
         );
         map.insert("kubeEnvironmentId", kube_environment_id.to_string());
+    } else {
+        let kube_environment_id: String = Input::new()
+            .with_prompt("Please supply the Resource ID for the Azure ContainerApps Environment.")
+            .interact_text()?;
+        map.insert("kubeEnvironmentId", kube_environment_id);
     };
     if let Some(resource_group) = matches.value_of("resourceGroup") {
         debug!("ContainerApps resource group set to {}", resource_group);
         map.insert("resourceGroup", resource_group.to_string());
+    } else {
+        let resource_group: String = Input::new()
+            .with_prompt(
+                "Please supply the Resource Group Name for the Azure ContainerApps instance.",
+            )
+            .interact_text()?;
+        map.insert("kubeEnvironmentId", resource_group);
     };
     trace!("Finished evaluation of CLI values.");
-    map
+    Ok(map)
 }
 
 fn get_docker_compose_file(map: &HashMap<&'static str, String>) -> Result<Compose> {

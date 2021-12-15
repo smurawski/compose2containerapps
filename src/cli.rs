@@ -22,7 +22,6 @@ pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
                 .long("containerapps-environment-id")
                 .short("i")
                 .help("Resource ID for the ContainerApps environment.")
-                .required(true)
                 .aliases(&[
                     "resource-id",
                     "resourceid",
@@ -37,7 +36,6 @@ pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
                 .long("resource-group")
                 .short("g")
                 .help("Resource Group for the ContainerApps environment.")
-                .required(true)
                 .takes_value(true)
                 .env("RESOURCE_GROUP")
                 .aliases(&["resourcegroup", "resource-group-name", "resourcegroupname"]),
@@ -48,14 +46,12 @@ pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
                 .short("l")
                 .help("Resource group location for the ContainerApps environment.")
                 .takes_value(true)
-                .env("LOCATION")
-                .required(true),
+                .env("LOCATION"),
         )
         .arg(
             Arg::with_name("verbose")
                 .long("verbose")
                 .short("v")
-                .help("Resource group location for the ContainerApps environment.")
-                .required(false),
+                .help("Resource group location for the ContainerApps environment."),
         )
 }
