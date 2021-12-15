@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use custom_error::custom_error;
 use duct::cmd;
 use regex::Regex;
@@ -28,21 +30,11 @@ fn get_az_cli_path() -> Result<PathBuf, AzCliError> {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Default, Clone, Debug)]
 pub struct AzAccountInfo {
     subscription_name: Option<String>,
     subscription_id: Option<String>,
     tenant_id: Option<String>,
-}
-
-impl Default for AzAccountInfo {
-    fn default() -> Self {
-        AzAccountInfo {
-            subscription_name: None,
-            subscription_id: None,
-            tenant_id: None,
-        }
-    }
 }
 
 pub fn set_azure_environment(subscription: &str) -> Result<(), AzCliError> {
