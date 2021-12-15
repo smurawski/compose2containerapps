@@ -47,3 +47,4 @@ ARGS:
     <OUTPUT>    Base file name to write the Azure ContainerApps yaml configuration files.  Output file name will be
                 prefixed with the service name. [default: containerapps.yml]
 ```
+![Running the app](https://github.com/smurawski/compose2containerapps/raw/main/compose2containerapps.gif)
