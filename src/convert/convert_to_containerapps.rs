@@ -1,5 +1,6 @@
 use crate::compose::Service;
 use crate::containerapps::ContainerAppConfig;
+use crate::VERBOSE;
 use anyhow::Result;
 use std::collections::HashMap;
 
@@ -9,6 +10,13 @@ pub fn convert_to_containerapps(
     service: Service,
     cli_values: &HashMap<&str, String>,
 ) -> Result<ContainerAppConfig> {
+    if *VERBOSE {
+        println!();
+        println!(
+            "The ContainerApps configuration file is documented at https://aka.ms/containerapps/spec."
+        );
+        println!();
+    };
     let config = ContainerAppConfig {
         kind: "containerapp".to_string(),
         name: cli_values["name"].to_owned(),

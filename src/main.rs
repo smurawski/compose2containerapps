@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate lazy_static;
+
 mod cli;
 mod compose;
 mod containerapps;
@@ -5,38 +8,49 @@ mod convert;
 
 use anyhow::Result;
 use cli::get_app_cli;
-use compose::read_compose_file;
+use compose::{read_compose_file, Compose};
 use containerapps::write_to_containerapps_file;
 use convert::convert_to_containerapps;
 // Possible log options are (in order)
 // error, warn, info, debug, trace
+use dialoguer::Input;
 use log::{debug, trace};
 use std::collections::HashMap;
 use std::path::Path;
 
+lazy_static! {
+    pub static ref VERSION: String = format!("v{}", env!("CARGO_PKG_VERSION"));
+    pub static ref VERBOSE: bool = get_app_cli(&VERSION).get_matches().is_present("verbose");
+}
+
 fn main() -> Result<()> {
+    let map = get_cli_argument_value()?;
     env_logger::init();
+
+    let compose_file = get_docker_compose_file(&map)?;
+    convert_services_to_containerapps(map, compose_file)
+}
+
+fn get_cli_argument_value() -> Result<HashMap<&'static str, String>> {
     trace!("Starting evaluation of CLI values.");
-    let version = format!("v{}", env!("CARGO_PKG_VERSION"));
-    let matches = get_app_cli(&version).get_matches();
-    let compose_file_path = match matches.value_of("INPUT") {
-        Some(p) => {
-            debug!("Using input file of {}.", p);
-            Path::new(p)
-        }
-        None => panic!("Since there is a default value, we should never get here."),
-    };
-    let containerapps_file_path = match matches.value_of("OUTPUT") {
-        Some(p) => {
-            debug!("Using a output base name of {}.", p);
-            p
-        }
-        None => panic!("Since there is a default value, we should never get here."),
-    };
+    let matches = get_app_cli(&VERSION).get_matches();
     let mut map = HashMap::new();
+    if let Some(compose_file_path) = matches.value_of("INPUT") {
+        debug!("Using input file of {}.", compose_file_path);
+        map.insert("composePath", compose_file_path.to_string());
+    };
+    if let Some(containerapps_file_path) = matches.value_of("OUTPUT") {
+        debug!("Using a output base name of {}.", containerapps_file_path);
+        map.insert("containerappsPath", containerapps_file_path.to_string());
+    };
     if let Some(location) = matches.value_of("location") {
         debug!("ContainerApps location set to {}.", location);
         map.insert("location", location.to_string());
+    } else {
+        let location: String = Input::new()
+            .with_prompt("Please supply an Azure region for the ContainerApps instance.")
+            .interact_text()?;
+        map.insert("location", location);
     };
     if let Some(kube_environment_id) = matches.value_of("kubeEnvironmentId") {
         debug!(
@@ -44,20 +58,48 @@ fn main() -> Result<()> {
             kube_environment_id
         );
         map.insert("kubeEnvironmentId", kube_environment_id.to_string());
+    } else {
+        let kube_environment_id: String = Input::new()
+            .with_prompt("Please supply the Resource ID for the Azure ContainerApps Environment.")
+            .interact_text()?;
+        map.insert("kubeEnvironmentId", kube_environment_id);
     };
     if let Some(resource_group) = matches.value_of("resourceGroup") {
         debug!("ContainerApps resource group set to {}", resource_group);
         map.insert("resourceGroup", resource_group.to_string());
+    } else {
+        let resource_group: String = Input::new()
+            .with_prompt(
+                "Please supply the Resource Group Name for the Azure ContainerApps instance.",
+            )
+            .interact_text()?;
+        map.insert("kubeEnvironmentId", resource_group);
     };
-
     trace!("Finished evaluation of CLI values.");
-    trace!("Starting the conversion from Docker Compose to ContainerApps configuration.");
+    Ok(map)
+}
 
-    debug!(
-        "Reading the Docker Compose file from {}",
-        &compose_file_path.display()
-    );
-    let compose_file = read_compose_file(compose_file_path)?;
+fn get_docker_compose_file(map: &HashMap<&'static str, String>) -> Result<Compose> {
+    trace!("Starting the conversion from Docker Compose to ContainerApps configuration.");
+    let mut compose_file = Compose::default();
+    if let Some(path) = map.get("composePath") {
+        let compose_file_path = Path::new(&path);
+        debug!(
+            "Reading the Docker Compose file from {}",
+            &compose_file_path.display()
+        );
+        compose_file = read_compose_file(compose_file_path)?;
+    };
+    Ok(compose_file)
+}
+
+fn convert_services_to_containerapps(
+    source_map: HashMap<&'static str, String>,
+    compose_file: Compose,
+) -> Result<()> {
+    let containerapps_file_path = source_map.get("containerappsPath").unwrap();
+
+    let mut map = source_map.clone();
     for (service_name, service) in compose_file.services {
         debug!(
             "Creating a ContainerApps configuration for the {} service.",

@@ -1,11 +1,25 @@
 use crate::compose::{PortMapping, Ports, Protocol, Service};
 use crate::containerapps::IngressConfiguration;
+use crate::VERBOSE;
 use anyhow::Result;
 use dialoguer::FuzzySelect;
 use log::{debug, trace, warn};
 
 pub fn get_ingress_from_service(service: &Service) -> Result<IngressConfiguration> {
     trace!("Creating the ingress configuration.");
+    if *VERBOSE {
+        println!();
+        println!("Ingress in ContainerApps exposes port 80 and 443 to the world via an external ingress.");
+        println!("By default external port 80 HTTP traffic is redirected to HTTPS on 443.");
+        println!("You can also expose internal ingresses.  This is how one ContainerApp can talk to another.");
+        println!("Internal ingresses are HTTP/HTTPS only as well - no general TCP or UDP traffic.");
+        println!("You can read more about ingresses at https://aka.ms/containerapps/ingress.");
+        println!(
+            "If you are running multiple public-facing ContainerApps (multiple external ingresses)"
+        );
+        println!("make sure you read https://aka.ms/containerapps/ingress#ip-addresses-and-domain-names.");
+        println!();
+    };
     let mut ingress = IngressConfiguration::default();
     if !service.ports.is_empty() {
         debug!("Service had ports defined.");

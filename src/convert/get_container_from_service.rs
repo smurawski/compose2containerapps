@@ -1,10 +1,17 @@
 use crate::compose::Service;
 use crate::containerapps::{Container, EnvironmentConfiguration};
+use crate::VERBOSE;
 use anyhow::Result;
 use dialoguer::Input;
 use log::debug;
 
 pub fn get_container_from_service(service: &Service) -> Result<Container> {
+    if *VERBOSE {
+        println!();
+        println!("The container template includes the container image, an optional name,");
+        println!("as well as environment variables. All the options are defined https://aka.ms/containerapps/containers#configuration.");
+        println!();
+    };
     let mut container = Container::default();
     if let Some(image) = &service.image {
         container.image = image.value()?.to_string();
