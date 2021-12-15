@@ -2,6 +2,7 @@ use crate::compose::Service;
 use crate::containerapps::{Container, EnvironmentConfiguration};
 use anyhow::Result;
 use dialoguer::Input;
+use log::debug;
 
 pub fn get_container_from_service(service: &Service) -> Result<Container> {
     let mut container = Container::default();
@@ -14,10 +15,15 @@ pub fn get_container_from_service(service: &Service) -> Result<Container> {
     }
 
     if !service.environment.is_empty() {
-        for (key, wrapped_value) in service.environment.clone().into_iter() {
-            let new_value = match wrapped_value.value() {
-                Ok(v) => Some(v.to_string()),
+        debug!("Resolving environment variables for the container configuration.");
+        for (key, mut wrapped_value) in service.environment.clone().into_iter() {
+            let new_value = match wrapped_value.interpolate() {
+                Ok(v) => {
+                    debug!("Resolved environment variable for {} to {}", &key, v);
+                    Some(v.to_string())
+                }
                 _ => {
+                    debug!("Failed to interpolate the environment variable {}", &key);
                     println!(
                         "Unable to resolve the variable reference for {}",
                         &wrapped_value
