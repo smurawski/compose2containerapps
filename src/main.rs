@@ -10,14 +10,20 @@ use containerapps::write_to_containerapps_file;
 use convert::convert_to_containerapps;
 // Possible log options are (in order)
 // error, warn, info, debug, trace
+use env_logger::Env;
 use log::{debug, trace};
 use std::collections::HashMap;
 use std::path::Path;
 
 fn main() -> Result<()> {
-    env_logger::init();
-
     let map = get_cli_argument_value();
+
+    if let Some(v) = map.get("verbose") {
+        env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
+    } else {
+        env_logger::init();
+    }
+
     let compose_file = get_docker_compose_file(&map)?;
     convert_services_to_containerapps(map, compose_file)
 }
