@@ -23,7 +23,7 @@ pub fn get_properties(kube_environment: String, service: &Service) -> Result<Pro
 
 #[cfg(test)]
 mod tests {
-    use crate::convert::tests::{get_converted_containerapps_config, read_containerapps_file};
+    use super::super::tests::{get_converted_containerapps_config, read_containerapps_file};
 
     #[test]
     fn conversion_sets_properties_kube_environment_id_from_cli() {

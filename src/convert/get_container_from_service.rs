@@ -53,7 +53,7 @@ pub fn get_container_from_service(service: &Service) -> Result<Container> {
 
 #[cfg(test)]
 mod tests {
-    use crate::convert::tests::*;
+    use super::super::tests::*;
 
     // #[test]
     // fn conversion_prompts_for_undefined_environment_variables() {
