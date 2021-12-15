@@ -34,10 +34,6 @@ fn main() -> Result<()> {
         None => panic!("Since there is a default value, we should never get here."),
     };
     let mut map = HashMap::new();
-    if let Some(name) = matches.value_of("name") {
-        debug!("ContainerApps name set to {}.", name);
-        map.insert("name", name.to_string());
-    };
     if let Some(location) = matches.value_of("location") {
         debug!("ContainerApps location set to {}.", location);
         map.insert("location", location.to_string());
@@ -67,9 +63,13 @@ fn main() -> Result<()> {
             "Creating a ContainerApps configuration for the {} service.",
             service_name
         );
-        let container_file = convert_to_containerapps(service, &map)?;
-        let new_path = format!("{}-{}", service_name, containerapps_file_path);
+        let new_path = format!("{}-{}", &service_name, containerapps_file_path);
         let per_service_containerapps_file_path = Path::new(&new_path);
+        if map.contains_key("name") {
+            map.remove("name");
+        }
+        map.insert("name", service_name);
+        let container_file = convert_to_containerapps(service, &map)?;
 
         debug!(
             "Writing a ContainerApps configuration to {}.",

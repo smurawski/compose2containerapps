@@ -29,6 +29,7 @@ pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
                     "kubeEnvironmentId",
                     "kube-environment-id",
                 ])
+                .env("CONTAINERAPPS_ENVIRONMENT_ID")
                 .takes_value(true),
         )
         .arg(
@@ -38,15 +39,8 @@ pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
                 .help("Resource Group for the ContainerApps environment.")
                 .required(true)
                 .takes_value(true)
+                .env("RESOURCE_GROUP")
                 .aliases(&["resourcegroup", "resource-group-name", "resourcegroupname"]),
-        )
-        .arg(
-            Arg::with_name("name")
-                .long("name")
-                .short("n")
-                .help("Resource Name for the ContainerApps revision.")
-                .takes_value(true)
-                .required(true),
         )
         .arg(
             Arg::with_name("location")
@@ -54,6 +48,7 @@ pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
                 .short("l")
                 .help("Resource group location for the ContainerApps environment.")
                 .takes_value(true)
+                .env("LOCATION")
                 .required(true),
         )
 }

@@ -1,11 +1,10 @@
+set dotenv-load := true
 set shell := ["pwsh", "-c"]
 
-location          := "eastus"
-name              := "mycontainerapp"
-resourceGroup     := "myresourcegroup"
-kubeEnvironmentId := "/subscriptions/mysubscription/resourceGroups/myresourcegroup/providers/Microsoft.Web/kubeEnvironments/myenvironment"
-composeFile       := "./test/docker-compose.yml"
+defaultComposeFile       := "./test/docker-compose.yml"
 
+export RUST_BACKTRACE := "1"
+export RUST_LOG       := "compose2containerapp=trace"
 
 default: lint check test
 
@@ -19,8 +18,12 @@ check:
 test:
     cargo test
 
-run $RUST_LOG="trace" $RUST_BACKTRACE="1":
-    cargo run -- {{composeFile}} -i {{kubeEnvironmentId}} -g {{resourceGroup}} -n {{name}} -l {{location}}
+run composeFile=defaultComposeFile:
+    cargo run -- {{composeFile}}
+
+multiple-service: (run "./test/docker-compose-multiple-service.yml")
+
+multiple-port: (run "./test/docker-compose-multiple-service-multiple-port.yml")
 
 publish:
     $Version = ((cargo run -- -V) -split ' ')[1]
