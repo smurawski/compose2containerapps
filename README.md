@@ -25,16 +25,17 @@ This app should build with minimal dependencies.  It's been tested with Rust 1.5
 The application has three mandatory parameters and two optional ones (that have default values).  There are environment variables that can be provided in place of CLI arguments.
 
 ```
-compose2containerapps v0.3.0
+compose2containerapps v0.3.1
 Steven Murawski <steven.murawski@microsoft.com>
 Converts Docker Compose files to Azure ContainerApps yaml configuration files
 
 USAGE:
-    compose2containerapp.exe --containerapps-environment-id <kubeEnvironmentId> --location <location> --resource-group <resourceGroup> [ARGS]
+    compose2containerapp.exe [FLAGS] --containerapps-environment-id <kubeEnvironmentId> --location <location> --resource-group <resourceGroup> [ARGS]
 
 FLAGS:
     -h, --help       Prints help information
     -V, --version    Prints version information
+    -v, --verbose    Resource group location for the ContainerApps environment.
 
 OPTIONS:
     -i, --containerapps-environment-id <kubeEnvironmentId>
