@@ -24,7 +24,7 @@ test:
     cargo test
 
 run composeFile=defaultComposeFile:
-    cargo run -- {{composeFile}} --skip-validate-azure
+    cargo run -- {{composeFile}}
 
 multiple-service: (run "./test/docker-compose-multiple-service.yml")
 

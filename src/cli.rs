@@ -58,6 +58,13 @@ pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
                 .env("LOCATION"),
         )
         .arg(
+            Arg::with_name("subscription_name")
+                .long("subscription-name")
+                .help("Resource group location for the ContainerApps environment.")
+                .takes_value(true)
+                .env("AZURE_SUBSCRIPTION_NAME"),
+        )
+        .arg(
             Arg::with_name("verbose")
                 .long("verbose")
                 .short("v")
@@ -69,5 +76,12 @@ pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
                 .short("s")
                 .hidden(true)
                 .help("Skip logging into Azure via the Azure CLI."),
+        )
+        .arg(
+            Arg::with_name("skip_deploy_azure")
+                .long("skip-deploy-azure")
+                .short("d")
+                .hidden(true)
+                .help("Skip deploying the ContainerApps into Azure via the Azure CLI."),
         )
 }

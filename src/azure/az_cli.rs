@@ -8,6 +8,7 @@ use std::env;
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::process::Output;
+use log::{trace, debug};
 //use uuid::Uuid;
 
 custom_error! {
@@ -23,7 +24,13 @@ custom_error! {
 }
 
 fn get_az_cli_path() -> Result<PathBuf, AzCliError> {
-    if let Some(cli_path) = find_command("az") {
+    let cmd_name = if cfg!(target_os = "windows") {
+        "az.cmd"
+    }
+    else {
+        "az"
+    };
+    if let Some(cli_path) = find_command(cmd_name) {
         Ok(cli_path)
     } else {
         Err(AzCliError::CliMissing)
@@ -38,12 +45,14 @@ pub struct AzAccountInfo {
 }
 
 pub fn set_azure_environment(subscription: &str) -> Result<(), AzCliError> {
+    trace!("Entering set azure environment.");
     println!(
         "Checking to see if the Azure CLI is authenticated and which subscription is default."
     );
     let account = match get_account_info() {
         Ok(a) => a,
         Err(_) => {
+            trace!("Failed to get existing login information.  Prompting for new login.");
             login()?;
             println!("Checking for the default subscription.");
             get_account_info()?
@@ -231,13 +240,14 @@ fn set_target_subscription(subscription_name: &str) -> Result<AzAccountInfo, AzC
 
 fn run_az_command_with_output(args: Vec<&str>) -> Result<Output, AzCliError> {
     let az_cli_path = get_az_cli_path()?;
+    debug!("Found the az CLI at {}", &az_cli_path.display());
 
     let output = cmd(az_cli_path, &args)
         .stderr_to_stdout()
         .stdout_capture()
         .unchecked()
         .run()?;
-
+    debug!("{:?}", &output);
     Ok(output)
 }
 
