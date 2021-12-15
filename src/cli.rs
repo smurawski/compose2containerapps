@@ -18,6 +18,15 @@ pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
                 .default_value("containerapps.yml"),
         )
         .arg(
+            Arg::with_name("kubeEnvironmentName")
+                .long("containerapps-environment-name")
+                .short("n")
+                .help("Resource Name for the ContainerApps environment.")
+                .env("CONTAINERAPPS_ENVIRONMENT_NAME")
+                .takes_value(true)
+                .hidden(true),
+        )
+        .arg(
             Arg::with_name("kubeEnvironmentId")
                 .long("containerapps-environment-id")
                 .short("i")
@@ -52,6 +61,13 @@ pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
             Arg::with_name("verbose")
                 .long("verbose")
                 .short("v")
-                .help("Resource group location for the ContainerApps environment."),
+                .help("Enable verbose output."),
+        )
+        .arg(
+            Arg::with_name("skip_validate_azure")
+                .long("skip-validate-azure")
+                .short("s")
+                .hidden(true)
+                .help("Skip logging into Azure via the Azure CLI."),
         )
 }

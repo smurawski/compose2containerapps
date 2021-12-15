@@ -16,9 +16,9 @@ pub use get_template_from_service::*;
 
 #[cfg(test)]
 pub mod tests {
+    use super::convert_to_containerapps;
     use crate::compose::{Compose, Service};
     use crate::containerapps::*;
-    use std::collections::HashMap;
     use std::fs::File;
     use std::path::Path;
 
@@ -39,12 +39,14 @@ pub mod tests {
         compose.services.get("ghost").unwrap().to_owned()
     }
 
-    pub fn get_sample_cli_args() -> HashMap<&'static str, String> {
-        let mut map = HashMap::new();
-        map.insert("name", "mycontainerapp".to_string());
-        map.insert("resourceGroup", "myresourcegroup".to_string());
-        map.insert("kubeEnvironmentId", "/subscriptions/mysubscription/resourceGroups/myresourcegroup/providers/Microsoft.Web/kubeEnvironments/myenvironment".to_string());
-        map.insert("location", "northeurope".to_string());
-        map
+    pub fn get_converted_containerapps_config() -> ContainerAppConfig {
+        let compose_config = get_service_from_docker_compose_file();
+        convert_to_containerapps(
+            "mycontainerapp",
+            compose_config,
+            "myresourcegroup",
+            "northeurope",
+            "/subscriptions/mysubscription/resourceGroups/myresourcegroup/providers/Microsoft.Web/kubeEnvironments/myenvironment"
+        ).unwrap()
     }
 }

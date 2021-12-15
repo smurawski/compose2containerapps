@@ -32,14 +32,11 @@ pub fn get_configuration_from_service(service: &Service) -> Result<Configuration
 #[cfg(test)]
 mod tests {
     use crate::containerapps::RevisionMode;
-    use crate::convert::convert_to_containerapps;
-    use crate::convert::tests::{get_sample_cli_args, get_service_from_docker_compose_file};
+    use crate::convert::tests::get_converted_containerapps_config;
 
     #[test]
     fn conversion_defaults_properties_configuration_active_revision_mode_to_single() {
-        let compose_config = get_service_from_docker_compose_file();
-        let cli_args = get_sample_cli_args();
-        let new_containerapps_config = convert_to_containerapps(compose_config, &cli_args).unwrap();
+        let new_containerapps_config = get_converted_containerapps_config();
 
         assert_eq!(
             new_containerapps_config

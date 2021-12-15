@@ -2,13 +2,15 @@ use crate::compose::Service;
 use crate::containerapps::ContainerAppConfig;
 use crate::VERBOSE;
 use anyhow::Result;
-use std::collections::HashMap;
 
 use super::get_properties;
 
 pub fn convert_to_containerapps(
+    service_name: &str,
     service: Service,
-    cli_values: &HashMap<&str, String>,
+    resource_group: &str,
+    location: &str,
+    kube_environment_id: &str,
 ) -> Result<ContainerAppConfig> {
     if *VERBOSE {
         println!();
@@ -19,12 +21,12 @@ pub fn convert_to_containerapps(
     };
     let config = ContainerAppConfig {
         kind: "containerapp".to_string(),
-        name: cli_values["name"].to_owned(),
-        resource_group: cli_values["resourceGroup"].to_owned(),
-        location: cli_values["location"].to_owned(),
+        name: service_name.to_owned(),
+        resource_group: resource_group.to_owned(),
+        location: location.to_owned(),
         resource_type: "Microsoft.Web/containerApps".to_string(),
         tags: None,
-        properties: get_properties(cli_values["kubeEnvironmentId"].to_owned(), &service)?,
+        properties: get_properties(kube_environment_id.to_owned(), &service)?,
     };
 
     Ok(config)
@@ -32,16 +34,11 @@ pub fn convert_to_containerapps(
 
 #[cfg(test)]
 mod tests {
-    use crate::convert::convert_to_containerapps;
-    use crate::convert::tests::{
-        get_sample_cli_args, get_service_from_docker_compose_file, read_containerapps_file,
-    };
+    use crate::convert::tests::{get_converted_containerapps_config, read_containerapps_file};
 
     #[test]
     fn conversion_sets_name_from_cli() {
-        let compose_config = get_service_from_docker_compose_file();
-        let cli_args = get_sample_cli_args();
-        let new_containerapps_config = convert_to_containerapps(compose_config, &cli_args).unwrap();
+        let new_containerapps_config = get_converted_containerapps_config();
 
         let reference_containerapps_config = read_containerapps_file();
         assert_eq!(
@@ -52,9 +49,7 @@ mod tests {
 
     #[test]
     fn conversion_sets_resource_group_from_cli() {
-        let compose_config = get_service_from_docker_compose_file();
-        let cli_args = get_sample_cli_args();
-        let new_containerapps_config = convert_to_containerapps(compose_config, &cli_args).unwrap();
+        let new_containerapps_config = get_converted_containerapps_config();
 
         let reference_containerapps_config = read_containerapps_file();
         assert_eq!(
@@ -65,9 +60,7 @@ mod tests {
 
     #[test]
     fn conversion_sets_location_from_cli() {
-        let compose_config = get_service_from_docker_compose_file();
-        let cli_args = get_sample_cli_args();
-        let new_containerapps_config = convert_to_containerapps(compose_config, &cli_args).unwrap();
+        let new_containerapps_config = get_converted_containerapps_config();
 
         let reference_containerapps_config = read_containerapps_file();
         assert_eq!(
