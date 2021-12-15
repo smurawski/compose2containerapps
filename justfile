@@ -8,11 +8,10 @@ export RUST_LOG       := "compose2containerapp=trace"
 
 default: lint check test
 
-fmt:
+try:
     cargo fmt
     cargo clippy --fix
     cargo check
-
 
 lint:
     cargo fmt --all -- --check
