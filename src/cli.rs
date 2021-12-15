@@ -51,4 +51,11 @@ pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
                 .env("LOCATION")
                 .required(true),
         )
+        .arg(
+            Arg::with_name("verbose")
+                .long("verbose")
+                .short("v")
+                .help("Resource group location for the ContainerApps environment.")
+                .required(false),
+        )
 }

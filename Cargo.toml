@@ -15,3 +15,4 @@ console = "*"
 dialoguer = { version = "*", features = ["fuzzy-select"] }
 log = "*"
 env_logger = "*"
+lazy_static = "*"

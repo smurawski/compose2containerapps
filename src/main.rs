@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate lazy_static;
+
 mod cli;
 mod compose;
 mod containerapps;
@@ -10,19 +13,18 @@ use containerapps::write_to_containerapps_file;
 use convert::convert_to_containerapps;
 // Possible log options are (in order)
 // error, warn, info, debug, trace
-use env_logger::Env;
 use log::{debug, trace};
 use std::collections::HashMap;
 use std::path::Path;
 
+lazy_static! {
+    pub static ref VERSION: String = format!("v{}", env!("CARGO_PKG_VERSION"));
+    pub static ref VERBOSE: bool = get_app_cli(&VERSION).get_matches().is_present("verbose");
+}
+
 fn main() -> Result<()> {
     let map = get_cli_argument_value();
-
-    if let Some(v) = map.get("verbose") {
-        env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
-    } else {
-        env_logger::init();
-    }
+    env_logger::init();
 
     let compose_file = get_docker_compose_file(&map)?;
     convert_services_to_containerapps(map, compose_file)
@@ -30,8 +32,7 @@ fn main() -> Result<()> {
 
 fn get_cli_argument_value() -> HashMap<&'static str, String> {
     trace!("Starting evaluation of CLI values.");
-    let version = format!("v{}", env!("CARGO_PKG_VERSION"));
-    let matches = get_app_cli(&version).get_matches();
+    let matches = get_app_cli(&VERSION).get_matches();
     let mut map = HashMap::new();
     if let Some(compose_file_path) = matches.value_of("INPUT") {
         debug!("Using input file of {}.", compose_file_path);
