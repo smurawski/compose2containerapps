@@ -6,15 +6,15 @@ defaultComposeFile       := "./test/docker-compose.yml"
 export RUST_BACKTRACE := "1"
 export RUST_LOG       := "compose2containerapp=trace"
 
-default: lint check test
+default: lint clippy check test
 
-try:
+try: && clippy check
     cargo fmt
-    cargo clippy --fix
-    cargo check
 
 lint:
     cargo fmt --all -- --check
+
+clippy:
     cargo clippy -- -D warnings
 
 check:
