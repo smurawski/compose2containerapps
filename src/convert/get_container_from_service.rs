@@ -1,6 +1,8 @@
 use crate::compose::Service;
 use crate::containerapps::{Container, EnvironmentConfiguration};
 use anyhow::Result;
+use dialoguer::Input;
+use log::debug;
 
 pub fn get_container_from_service(service: &Service) -> Result<Container> {
     let mut container = Container::default();
@@ -13,10 +15,23 @@ pub fn get_container_from_service(service: &Service) -> Result<Container> {
     }
 
     if !service.environment.is_empty() {
-        for (key, wrapped_value) in service.environment.clone().into_iter() {
-            let new_value = match wrapped_value.value() {
-                Ok(v) => Some(v.to_string()),
-                _ => None,
+        debug!("Resolving environment variables for the container configuration.");
+        for (key, mut wrapped_value) in service.environment.clone().into_iter() {
+            let new_value = match wrapped_value.interpolate() {
+                Ok(v) => {
+                    debug!("Resolved environment variable for {} to {}", &key, v);
+                    Some(v.to_string())
+                }
+                _ => {
+                    debug!("Failed to interpolate the environment variable {}", &key);
+                    println!(
+                        "Unable to resolve the variable reference for {}",
+                        &wrapped_value
+                    );
+                    let prompt = format!("Please enter a value for {}", key);
+                    let value: String = Input::new().with_prompt(prompt).interact_text()?;
+                    Some(value)
+                }
             };
             let env = EnvironmentConfiguration {
                 name: key,
@@ -33,6 +48,17 @@ pub fn get_container_from_service(service: &Service) -> Result<Container> {
 mod tests {
     use crate::convert::convert_to_containerapps;
     use crate::convert::tests::*;
+
+    // #[test]
+    // fn conversion_prompts_for_undefined_environment_variables() {
+    //     let compose_config = get_service_from_docker_compose_file();
+    //     compose_config
+    //         .environment
+    //         .clone()
+    //         .into_iter()
+    //         .map(|(_, mut env)| println!("{}", env))
+    //         .collect::<Vec<_>>();
+    // }
 
     #[test]
     fn conversion_sets_properties_template_containers_image() {
