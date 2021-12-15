@@ -53,7 +53,6 @@ pub fn get_container_from_service(service: &Service) -> Result<Container> {
 
 #[cfg(test)]
 mod tests {
-    use crate::convert::convert_to_containerapps;
     use crate::convert::tests::*;
 
     // #[test]
@@ -69,9 +68,7 @@ mod tests {
 
     #[test]
     fn conversion_sets_properties_template_containers_image() {
-        let compose_config = get_service_from_docker_compose_file();
-        let cli_args = get_sample_cli_args();
-        let new_containerapps_config = convert_to_containerapps(compose_config, &cli_args).unwrap();
+        let new_containerapps_config = get_converted_containerapps_config();
 
         let reference_containerapps_config = read_containerapps_file();
         let new_ghost_container = new_containerapps_config
@@ -92,9 +89,7 @@ mod tests {
 
     #[test]
     fn conversion_sets_properties_template_containers_name() {
-        let compose_config = get_service_from_docker_compose_file();
-        let cli_args = get_sample_cli_args();
-        let new_containerapps_config = convert_to_containerapps(compose_config, &cli_args).unwrap();
+        let new_containerapps_config = get_converted_containerapps_config();
 
         let reference_containerapps_config = read_containerapps_file();
         let new_ghost_container = new_containerapps_config
@@ -117,9 +112,7 @@ mod tests {
 
     #[test]
     fn conversion_sets_properties_template_containers_environment() {
-        let compose_config = get_service_from_docker_compose_file();
-        let cli_args = get_sample_cli_args();
-        let new_containerapps_config = convert_to_containerapps(compose_config, &cli_args).unwrap();
+        let new_containerapps_config = get_converted_containerapps_config();
 
         let reference_containerapps_config = read_containerapps_file();
         let new_ghost_container_env = new_containerapps_config

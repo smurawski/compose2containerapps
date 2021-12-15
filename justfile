@@ -8,9 +8,14 @@ export RUST_LOG       := "compose2containerapp=trace"
 
 default: lint check test
 
+try:
+    cargo fmt
+    cargo clippy --fix
+    cargo check
+
 lint:
     cargo fmt --all -- --check
-    cargo clippy
+    cargo clippy -- -D warnings
 
 check:
     cargo check
@@ -19,11 +24,11 @@ test:
     cargo test
 
 run composeFile=defaultComposeFile:
-    cargo run -- {{composeFile}}
+    cargo run -- {{composeFile}} --skip-validate-azure
 
 multiple-service: (run "./test/docker-compose-multiple-service.yml")
 
-multiple-port: (run "./test/docker-compose-multiple-service-multiple-port.yml")
+multiple-port: (run "./test/docker-compose-multiple-service-multiple-ports.yml")
 
 publish:
     $Version = ((cargo run -- -V) -split ' ')[1]

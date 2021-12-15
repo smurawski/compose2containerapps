@@ -115,16 +115,11 @@ fn expand_service_ports(service: &Service) -> Vec<u16> {
 #[cfg(test)]
 mod tests {
     use crate::containerapps::Transport;
-    use crate::convert::convert_to_containerapps;
-    use crate::convert::tests::{
-        get_sample_cli_args, get_service_from_docker_compose_file, read_containerapps_file,
-    };
+    use crate::convert::tests::{get_converted_containerapps_config, read_containerapps_file};
 
     #[test]
     fn conversion_defaults_properties_configuration_ingress_transport_to_auto() {
-        let compose_config = get_service_from_docker_compose_file();
-        let cli_args = get_sample_cli_args();
-        let new_containerapps_config = convert_to_containerapps(compose_config, &cli_args).unwrap();
+        let new_containerapps_config = get_converted_containerapps_config();
 
         assert_eq!(
             new_containerapps_config
@@ -138,9 +133,7 @@ mod tests {
 
     #[test]
     fn conversion_sets_properties_configuration_ingress_target_port() {
-        let compose_config = get_service_from_docker_compose_file();
-        let cli_args = get_sample_cli_args();
-        let new_containerapps_config = convert_to_containerapps(compose_config, &cli_args).unwrap();
+        let new_containerapps_config = get_converted_containerapps_config();
 
         let reference_containerapps_config = read_containerapps_file();
         assert_eq!(
