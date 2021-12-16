@@ -6,7 +6,7 @@ defaultContainerAppsFile := "skipazure-containerapps.yml"
 
 default: lint clippy check test
 
-try: bicep-build && clippy check
+try: bicep-build && check clippy test
     cargo fmt
 
 lint:
@@ -20,8 +20,6 @@ check:
 
 test:
     cargo test
-
-
 
 run composeFile=defaultComposeFile: bicep-build
     cargo run -- {{composeFile}}

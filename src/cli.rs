@@ -85,7 +85,6 @@ pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
             Arg::with_name("skip_azure")
                 .long("skip-azure")
                 .short("s")
-                .hidden(true)
                 .help("Skip Azure interaction via the Azure CLI."),
         )
 }
