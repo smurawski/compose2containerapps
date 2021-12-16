@@ -14,7 +14,7 @@ pub use self::secrets::SecretsConfiguration;
 pub use self::traffic_configuration::TrafficConfiguration;
 pub use self::transport::Transport;
 
-#[derive(Default, Debug, Serialize, Deserialize)]
+#[derive(Default, Debug, Serialize, Deserialize, Clone)]
 pub struct Configuration {
     #[serde(rename = "activeRevisionsMode", default)]
     pub active_revisions_mode: RevisionMode,

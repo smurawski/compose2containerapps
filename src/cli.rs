@@ -1,4 +1,14 @@
-use clap::{App, Arg};
+use clap::{arg_enum, App, Arg};
+
+arg_enum! {
+    #[allow(non_camel_case_types)]
+    #[derive(Debug)]
+    pub enum Region {
+        eastus,
+        westus,
+        centralus,
+    }
+}
 
 pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
     App::new("compose2containerapps")
@@ -55,6 +65,7 @@ pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
                 .short("l")
                 .help("Resource group location for the ContainerApps environment.")
                 .takes_value(true)
+                .possible_values(&Region::variants())
                 .env("LOCATION"),
         )
         .arg(
@@ -71,17 +82,10 @@ pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
                 .help("Enable verbose output."),
         )
         .arg(
-            Arg::with_name("skip_validate_azure")
-                .long("skip-validate-azure")
+            Arg::with_name("skip_azure")
+                .long("skip-azure")
                 .short("s")
                 .hidden(true)
-                .help("Skip logging into Azure via the Azure CLI."),
-        )
-        .arg(
-            Arg::with_name("skip_deploy_azure")
-                .long("skip-deploy-azure")
-                .short("d")
-                .hidden(true)
-                .help("Skip deploying the ContainerApps into Azure via the Azure CLI."),
+                .help("Skip Azure interaction via the Azure CLI."),
         )
 }

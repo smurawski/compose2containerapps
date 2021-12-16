@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Default, Debug, Serialize, Deserialize)]
+#[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct TrafficConfiguration {
     #[serde(rename = "latestRevision", skip_serializing_if = "Option::is_none")]
     pub latest_revision: Option<bool>,
