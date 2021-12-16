@@ -2,16 +2,9 @@ use super::ConvertedComposeConfiguration;
 use crate::azure::*;
 use anyhow::Result;
 
+#[derive(Default)]
 pub struct DeployAzureCommand {
     configurations: Vec<ConvertedComposeConfiguration>,
-}
-
-impl Default for DeployAzureCommand {
-    fn default() -> DeployAzureCommand {
-        DeployAzureCommand {
-            configurations: Vec::new(),
-        }
-    }
 }
 
 impl DeployAzureCommand {
