@@ -76,7 +76,7 @@ fn get_selected_port_index(ports: &[u16]) -> Result<usize> {
     let selection = if ports.len() > 1 {
         FuzzySelect::new()
         .items(ports)
-        .with_prompt("ContainerApps can only expose one port.  Please select the target port to expose externally.")
+        .with_prompt("ContainerApps can only expose one port.  Please select the target port to expose externally")
         .interact()?
     } else {
         0

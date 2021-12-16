@@ -2,19 +2,17 @@ set dotenv-load := true
 set shell := ["pwsh", "-c"]
 
 defaultComposeFile       := "./test/docker-compose.yml"
+defaultContainerAppsFile := "skipazure-containerapps.yml"
 
-export RUST_BACKTRACE := "1"
-export RUST_LOG       := "compose2containerapp=trace"
+default: lint clippy check test
 
-default: lint check test
-
-try:
+try: bicep-build && clippy check
     cargo fmt
-    cargo clippy --fix
-    cargo check
 
 lint:
     cargo fmt --all -- --check
+
+clippy:
     cargo clippy -- -D warnings
 
 check:
@@ -23,15 +21,31 @@ check:
 test:
     cargo test
 
-run composeFile=defaultComposeFile:
-    cargo run -- {{composeFile}} --skip-validate-azure
 
-multiple-service: (run "./test/docker-compose-multiple-service.yml")
 
-multiple-port: (run "./test/docker-compose-multiple-service-multiple-ports.yml")
+run composeFile=defaultComposeFile: bicep-build
+    cargo run -- {{composeFile}}
 
-publish:
-    $Version = ((cargo run -- -V) -split ' ')[1]
-    git tag $Version
-    git push origin $Version
+run-skip-azure composeFile=defaultComposeFile containerappsFile=defaultContainerAppsFile: 
+    cargo run -- {{composeFile}} {{containerappsFile}} --skip-azure
 
+run-multiple-service: (run-skip-azure "./test/docker-compose-multiple-service.yml")
+
+run-gamut: run-skip-azure run-multiple-service run-multiple-port
+
+run-multiple-port: (run-skip-azure "./test/docker-compose-multiple-service-multiple-ports.yml" "ports-containerapps.yml")
+
+bicep-build:
+    az bicep build --file ./src/support/main.bicep --outdir ./src/support/
+
+cleanup:
+    rm *-containerapps.yml
+    az group delete --name $env:RESOURCE_GROUP --no-wait -y
+
+demo: && show run show
+    Write-Host "Nothing up my sleeve."
+
+show:
+    -az group show --name $env:RESOURCE_GROUP
+
+    

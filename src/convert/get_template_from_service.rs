@@ -25,7 +25,7 @@ pub fn get_template_from_service(service: &Service) -> Result<Template> {
 
 #[cfg(test)]
 mod tests {
-    use crate::convert::tests::get_converted_containerapps_config;
+    use super::super::tests::get_converted_containerapps_config;
 
     #[test]
     fn conversion_sets_template_scale_to_min_1() {

@@ -21,7 +21,7 @@ pub fn write_to_containerapps_file(file_path: &Path, config: &ContainerAppConfig
     Ok(())
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ContainerAppConfig {
     pub kind: String,
     pub location: String,

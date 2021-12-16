@@ -34,7 +34,7 @@ pub fn convert_to_containerapps(
 
 #[cfg(test)]
 mod tests {
-    use crate::convert::tests::{get_converted_containerapps_config, read_containerapps_file};
+    use super::super::tests::{get_converted_containerapps_config, read_containerapps_file};
 
     #[test]
     fn conversion_sets_name_from_cli() {

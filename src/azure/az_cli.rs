@@ -1,13 +1,17 @@
 #![allow(dead_code)]
 
+use super::ARM;
 use custom_error::custom_error;
 use duct::cmd;
+use log::{debug, trace};
 use regex::Regex;
 use serde_json::Value;
 use std::env;
-use std::io::{BufRead, BufReader};
+use std::fs::{remove_file, File};
+use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
 use std::process::Output;
+
 //use uuid::Uuid;
 
 custom_error! {
@@ -20,10 +24,16 @@ custom_error! {
     CommandFailure{source: std::io::Error} = "Unable to log in via the Azure CLI",
     NotLoggedIn = "Az CLI is not authenticated.",
     MissingTemplate = "No template available to deploy",
+    TemplateFailed = "Deployment did not achieve the desired result.",
 }
 
 fn get_az_cli_path() -> Result<PathBuf, AzCliError> {
-    if let Some(cli_path) = find_command("az") {
+    let cmd_name = if cfg!(target_os = "windows") {
+        "az.cmd"
+    } else {
+        "az"
+    };
+    if let Some(cli_path) = find_command(cmd_name) {
         Ok(cli_path)
     } else {
         Err(AzCliError::CliMissing)
@@ -38,12 +48,14 @@ pub struct AzAccountInfo {
 }
 
 pub fn set_azure_environment(subscription: &str) -> Result<(), AzCliError> {
+    trace!("Entering set azure environment.");
     println!(
         "Checking to see if the Azure CLI is authenticated and which subscription is default."
     );
     let account = match get_account_info() {
         Ok(a) => a,
         Err(_) => {
+            trace!("Failed to get existing login information.  Prompting for new login.");
             login()?;
             println!("Checking for the default subscription.");
             get_account_info()?
@@ -63,6 +75,129 @@ pub fn set_azure_environment(subscription: &str) -> Result<(), AzCliError> {
         }
     }
 
+    Ok(())
+}
+
+pub fn setup_extensions_and_preview_commands() -> Result<(), AzCliError> {
+    trace!("Enabling the preview extension for az containerapps.");
+    let extension_url = "https://workerappscliextension.blob.core.windows.net/azure-cli-extension/containerapp-0.2.0-py2.py3-none-any.whl";
+    let _ =
+        run_az_command_with_output(vec!["extension", "add", "--source", extension_url, "--yes"])?;
+    trace!("Registering the Microsoft.Web provider.");
+    let _ =
+        run_az_command_with_output(vec!["provider", "register", "--namespace", "Microsoft.Web"])?;
+    Ok(())
+}
+
+pub fn get_az_containerapp_environment(
+    resource_group: &str,
+    environment_name: &str,
+) -> Result<Option<String>, AzCliError> {
+    let output = run_az_command_with_output(vec![
+        "containerapp",
+        "env",
+        "show",
+        "--resource-group",
+        resource_group,
+        "--name",
+        environment_name,
+    ])?;
+    let stdout = String::from_utf8(output.stdout)?;
+
+    let json: Value = match serde_json::from_str(&stdout) {
+        Ok(json_value) => json_value,
+        Err(_) => Value::default(),
+    };
+
+    if let Some(json_resource_id) = json.get("id") {
+        let resource_id = json_resource_id.as_str().unwrap();
+        debug!("az containerapp show output: {:?}", resource_id);
+        Ok(Some(resource_id.to_owned()))
+    } else {
+        Ok(None)
+    }
+}
+
+pub fn deploy_containerapps_env(
+    resource_group: &str,
+    environment_name: &str,
+    location: &str,
+) -> Result<String, AzCliError> {
+    create_arm_template()?;
+
+    let resource_group_parameter = format!("rgName={}", resource_group);
+    let name_parameter = format!("name={}", environment_name);
+    let location_parameter = format!("location={}", location);
+
+    let args = vec![
+        "deployment",
+        "sub",
+        "create",
+        "--location",
+        location,
+        "--template-file",
+        "azuredeploy.json",
+        "--parameters",
+        &resource_group_parameter,
+        &name_parameter,
+        &location_parameter,
+    ];
+    let output = run_az_command_with_output(args)?;
+    let stdout = String::from_utf8(output.stdout)?;
+    let stderr = String::from_utf8(output.stderr)?;
+    debug!("Template run stdout: {}", &stdout);
+    debug!("Template run stderr: {}", &stderr);
+
+    delete_arm_template()?;
+
+    let v: Value = serde_json::from_str(&stdout)?;
+    if let Some(resource_id) = v["properties"]["outputs"]["containerappEnvId"]["value"].as_str() {
+        debug!("New environment resource id: {}", resource_id);
+        Ok(resource_id.to_owned())
+    } else {
+        Err(AzCliError::TemplateFailed)
+    }
+}
+
+pub fn deploy_containerapps(
+    name: &str,
+    resource_group: &str,
+    yaml_path: &Path,
+) -> Result<String, AzCliError> {
+    debug!("Deploying {} to {}", name, resource_group);
+    let args = vec![
+        "containerapp",
+        "create",
+        "--name",
+        name,
+        "--resource-group",
+        resource_group,
+        "--yaml",
+        yaml_path.to_str().unwrap(),
+    ];
+    let output = run_az_command_with_output(args)?;
+    let stdout = String::from_utf8(output.stdout)?;
+    let stderr = String::from_utf8(output.stderr)?;
+    debug!("ContainerApps deployment run stdout: {}", &stdout);
+    debug!("ContainerApps deployment run stderr: {}", &stderr);
+    let v: Value = serde_json::from_str(&stdout)?;
+    if let Some(fqdn) = v["configuration"]["ingress"]["fqdn"].as_str() {
+        debug!("New environment resource id: {}", fqdn);
+        Ok(fqdn.to_owned())
+    } else {
+        Err(AzCliError::Unknown)
+    }
+}
+
+fn create_arm_template() -> Result<(), AzCliError> {
+    trace!("Creating ARM template.");
+    let mut output = File::create("azuredeploy.json")?;
+    write!(output, "{}", ARM)?;
+    Ok(())
+}
+fn delete_arm_template() -> Result<(), AzCliError> {
+    trace!("Removing ARM template.");
+    remove_file("azuredeploy.json")?;
     Ok(())
 }
 
@@ -133,14 +268,6 @@ fn set_target_subscription(subscription_name: &str) -> Result<AzAccountInfo, AzC
 
     Ok(account)
 }
-
-// fn create_resource_group(command: &Command) -> Result<Output, AzCliError> {
-//     let local_command = command.clone();
-//     let rg = local_command.resource_group.unwrap();
-//     let location = local_command.location.unwrap();
-//     let args = vec!["group", "create", "--name", &rg, "--location", &location];
-//     run_az_command_with_output(args)
-// }
 
 // pub fn run_cli_command(command: &Command) -> Result<Output, AzCliError> {
 //     create_resource_group(command)?;
@@ -231,13 +358,14 @@ fn set_target_subscription(subscription_name: &str) -> Result<AzAccountInfo, AzC
 
 fn run_az_command_with_output(args: Vec<&str>) -> Result<Output, AzCliError> {
     let az_cli_path = get_az_cli_path()?;
+    debug!("Found the az CLI at {}", &az_cli_path.display());
 
+    debug!("Running `az {}`", &args.join(" "));
     let output = cmd(az_cli_path, &args)
-        .stderr_to_stdout()
+        .stderr_capture()
         .stdout_capture()
         .unchecked()
         .run()?;
-
     Ok(output)
 }
 

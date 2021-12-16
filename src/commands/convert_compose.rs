@@ -4,15 +4,21 @@ use crate::convert::convert_to_containerapps;
 use anyhow::Result;
 use dialoguer::Input;
 use log::{debug, trace};
-use std::collections::HashMap;
 use std::path::PathBuf;
 use std::str::FromStr;
+
+#[derive(Clone)]
+pub struct ConvertedComposeConfiguration {
+    pub configuration: ContainerAppConfig,
+    pub resource_group: String,
+    pub path: PathBuf,
+}
 
 #[derive(Default)]
 pub struct ConvertComposeCommand {
     compose_path: PathBuf,
     containerapps_path: PathBuf,
-    containerapps_configs: HashMap<PathBuf, ContainerAppConfig>,
+    containerapps_configs: Vec<ConvertedComposeConfiguration>,
     resource_group: Option<String>,
     location: Option<String>,
     kube_environment_id: Option<String>,
@@ -43,8 +49,8 @@ impl ConvertComposeCommand {
         self
     }
 
-    pub fn with_kube_environment_id(mut self, kube_environment_id: Option<&str>) -> Self {
-        self.kube_environment_id = kube_environment_id.map(|v| v.to_string());
+    pub fn with_kube_environment_id(mut self, kube_environment_id: Option<String>) -> Self {
+        self.kube_environment_id = kube_environment_id;
         self
     }
 
@@ -55,10 +61,14 @@ impl ConvertComposeCommand {
     }
 
     pub fn write(self) -> Result<Self> {
-        for (path, config) in self.containerapps_configs.iter() {
-            write_to_containerapps_file(path, config)?
+        for config in self.containerapps_configs.iter() {
+            write_to_containerapps_file(&config.path, &config.configuration)?
         }
         Ok(self)
+    }
+
+    pub fn get_configurations(&self) -> Vec<ConvertedComposeConfiguration> {
+        self.containerapps_configs.to_vec()
     }
 
     fn get_docker_compose_file(&self) -> Result<Compose> {
@@ -73,8 +83,8 @@ impl ConvertComposeCommand {
     fn convert_services_to_containerapps(
         &self,
         compose_file: Compose,
-    ) -> Result<HashMap<PathBuf, ContainerAppConfig>> {
-        let mut containerapps = HashMap::new();
+    ) -> Result<Vec<ConvertedComposeConfiguration>> {
+        let mut containerapps = Vec::new();
         for (service_name, service) in compose_file.services {
             debug!(
                 "Creating a ContainerApps configuration for the {} service.",
@@ -99,7 +109,11 @@ impl ConvertComposeCommand {
                 &new_path.display()
             );
 
-            containerapps.insert(new_path, container_file);
+            containerapps.push(ConvertedComposeConfiguration {
+                resource_group: self.resource_group()?.to_owned(),
+                path: new_path,
+                configuration: container_file,
+            });
         }
         Ok(containerapps)
     }
@@ -112,7 +126,7 @@ impl ConvertComposeCommand {
             }
             None => Input::new()
                 .with_prompt(
-                    "Please supply the Resource Group Name for the Azure ContainerApps instance.",
+                    "Please supply the Resource Group Name for the Azure ContainerApps instance",
                 )
                 .interact_text()?,
         };
@@ -126,7 +140,7 @@ impl ConvertComposeCommand {
                 l.to_string()
             }
             None => Input::new()
-                .with_prompt("Please supply an Azure region for the ContainerApps instance.")
+                .with_prompt("Please supply an Azure region for the ContainerApps instance")
                 .interact_text()?,
         };
         Ok(location)
@@ -140,7 +154,7 @@ impl ConvertComposeCommand {
             }
             None => Input::new()
                 .with_prompt(
-                    "Please supply the Resource ID for the Azure ContainerApps Environment.",
+                    "Please supply the Resource ID for the Azure ContainerApps Environment",
                 )
                 .interact_text()?,
         };
