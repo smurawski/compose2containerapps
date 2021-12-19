@@ -22,23 +22,11 @@ check:
 test:
     cargo test
 
+run composeFile=defaultComposeFile action=defaultAction:
+   cargo run -- {{composeFile}} {{defaultAction}}
+
 run-hollan:
     cargo run -- "./test/jeff-hollan-compose.yml" deploy --transport Http2
-
-# run composeFile=defaultComposeFile action=defaultAction
-#     cargo run -- {{composeFile}} {{defaultAction}}
-
-# run-deploy:}} ) bicep-build
-#     cargo run -- {{composeFile}} deploy
-
-# run-convert composeFile=defaultComposeFile containerappsFile=defaultContainerAppsFile: 
-#     cargo run -- {{composeFile}} {{containerappsFile}} convert
-
-# run-multiple-service: (run-convert "./test/docker-compose-multiple-service.yml")
-
-# run-multiple-port: (run-convert "./test/docker-compose-multiple-service-multiple-ports.yml" "ports-containerapps.yml")
-
-# run-gamut: run-convert run-multiple-service run-multiple-port
 
 bicep-build:
     az bicep build --file ./src/support/main.bicep --outdir ./src/support/
