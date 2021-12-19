@@ -139,10 +139,9 @@ impl ConvertComposeCommand {
             );
             let mut fqdn = None;
             if self.deploy_azure {
-                write_to_containerapps_file(&new_path, &container_file)?;
-                write_containerapps_arm_template(&new_path, &container_file)?;
-                let service_fqdn =
-                    deploy_containerapps(&service_name, &self.resource_group()?, &new_path)?;
+                let json_file_path = new_path.to_path_buf().with_extension("json");
+                write_containerapps_arm_template(&json_file_path, &container_file)?;
+                let service_fqdn = deploy_containerapps(&service_name, &self.resource_group()?, &json_file_path)?;
                 let env_var_name = format!("{}_FQDN", &service_name.to_uppercase());
                 debug!(
                     "Setting enviroment variable {} to {}",

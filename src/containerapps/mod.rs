@@ -23,16 +23,17 @@ pub fn write_to_containerapps_file(file_path: &Path, config: &ContainerAppConfig
 
 pub fn write_containerapps_arm_template(file_path: &Path, config: &ContainerAppConfig) -> Result<()> {
     let mut arm_template_outline = ArmWrapper::default();
-    let json_file_path = file_path.to_path_buf().with_extension("json");
 
     let mut container_config = config.clone();
     container_config.kind = None;
     container_config.api_version = Some("2021-03-01".to_string());
     container_config.resource_group = None;
     arm_template_outline.resources.push(container_config);
+    arm_template_outline.outputs.containerapp_fqdn = OutputValue::new(&config.name); 
+
     let output_content = serde_json::to_string(&arm_template_outline)?;
-    let mut file = File::create(&json_file_path)
-        .unwrap_or_else(|_| panic!("Failed to create the output file - {:?}.", &json_file_path));
+    let mut file = File::create(file_path)
+        .unwrap_or_else(|_| panic!("Failed to create the output file - {:?}.", file_path));
     file.write_all(output_content.into_bytes().as_ref())?;
     Ok(())
 }
@@ -45,6 +46,7 @@ pub struct ArmWrapper {
     pub content_version: &'static str,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub resources: Vec<ContainerAppConfig>,
+    pub outputs: OutputWrapper,
 }
 impl Default for ArmWrapper {
     fn default() -> ArmWrapper {
@@ -52,6 +54,36 @@ impl Default for ArmWrapper {
             schema: "https://schema.management.azure.com/schemas/2019-08-01/deploymentTemplate.json#",
             content_version: "1.0.0.0",
             resources: Vec::new(),
+            outputs: OutputWrapper::default(),
+        }
+    }
+}
+
+#[derive(Default, Debug, Serialize, Deserialize, Clone)]
+pub struct OutputWrapper {
+    #[serde(rename = "containerappFqdn")]
+    pub containerapp_fqdn: OutputValue
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct OutputValue {
+    #[serde(rename = "type")]
+    pub output_type: String,
+    pub value: String
+}
+impl OutputValue {
+    pub fn new(service_name: &str) -> OutputValue {
+        OutputValue {
+            output_type: "string".to_string(), 
+            value: format!("[reference(resourceId('Microsoft.Web/containerApps', '{}')).configuration.ingress.fqdn]", service_name)
+        }
+    }
+}
+impl Default for OutputValue {
+    fn default() -> OutputValue {
+        OutputValue {
+            output_type: "string".to_string(),
+            value: "[reference(resourceId('Microsoft.Web/containerApps', 'SERVICENAME')).configuration.ingress.fqdn]".to_string(),
         }
     }
 }

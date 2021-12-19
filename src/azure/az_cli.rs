@@ -154,27 +154,27 @@ pub fn deploy_containerapps_env<'a>(
 pub fn deploy_containerapps<'a>(
     name: &'a str,
     resource_group: &'a str,
-    yaml_path: &'a Path,
+    json_path: &'a Path,
 ) -> Result<String> {
     trace!("Deploying {} to {}", name, resource_group);
     let args = vec![
-        "containerapp",
+        "deployment",
+        "group",
         "create",
-        "--name",
-        name,
         "--resource-group",
         resource_group,
-        "--yaml",
-        yaml_path.to_str().unwrap(),
+        "--template-file",
+        json_path.to_str().unwrap(),
     ];
     let command = AzCliCommand::default()
-        .with_name(format!("Deploy {} to {}", &name, &resource_group).as_str())
+        .with_name(format!("Deploy containerapps app {} to {}", &name, &resource_group).as_str())
         .with_args(args)
         .run()?;
     let stdout = command.get_stdout().unwrap();
+    remove_file(json_path)?;
 
     let v: Value = serde_json::from_str(&stdout)?;
-    if let Some(fqdn) = v["configuration"]["ingress"]["fqdn"].as_str() {
+    if let Some(fqdn) = v["properties"]["outputs"]["containerappFqdn"]["value"].as_str() {
         debug!("New environment resource id: {}", fqdn);
         Ok(fqdn.to_owned())
     } else {
