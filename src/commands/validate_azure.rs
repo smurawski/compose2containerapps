@@ -1,5 +1,5 @@
 use crate::azure::*;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use dialoguer::Input;
 use log::{debug, trace};
 
@@ -46,48 +46,46 @@ impl<'a> ValidateAzureCommand<'a> {
         self
     }
 
-    pub fn validate_azure_login(self, skip: bool) -> Result<Self> {
-        if !skip {
-            trace!("Checking for the az CLI and if we are logged into Azure.");
-            let subscription: String = if let Some(s) = self.subscription_name {
-                s.to_string()
-            } else {
-                Input::new()
-                    .with_prompt("Please enter the subscription name you would like to use")
-                    .interact_text()?
-            };
-            debug!("Logging in to Azure subscription {}", &subscription);
-            set_azure_environment(&subscription)?;
-            debug!("Logged in to Azure subscription {}", &subscription);
-        }
-        Ok(self)
-    }
-
-    pub fn retrieve_containerapps_environment(mut self, skip: bool) -> Result<Self> {
-        if !skip {
-            setup_extensions_and_preview_commands()?;
-            if self.resource_group.is_some() && self.containerapps_environment_name.is_some() {
-                self.containerapps_environment_resource_id = get_az_containerapp_environment(
-                    self.get_resource_group()?,
-                    self.get_containerapps_environment_name()?,
-                )?;
-            }
-            if self.containerapps_environment_resource_id.is_none() {
-                self.containerapps_environment_resource_id = Some(deploy_containerapps_env(
-                    self.get_resource_group()?,
-                    self.get_containerapps_environment_name()?,
-                    self.get_location()?,
-                )?);
-            }
-        }
-        Ok(self)
-    }
-
-    pub fn containerapps_environment_id(&self) -> Result<Option<String>> {
-        if let Some(v) = self.containerapps_environment_resource_id.clone() {
-            Ok(Some(v))
+    pub fn validate_azure_login(self) -> Result<Self> {
+        trace!("Checking for the az CLI and if we are logged into Azure.");
+        let subscription: String = if let Some(s) = self.subscription_name {
+            s.to_string()
         } else {
-            Ok(None)
+            Input::new()
+                .with_prompt("Please enter the subscription name you would like to use")
+                .interact_text()?
+        };
+        debug!("Logging in to Azure subscription {}", &subscription);
+        set_azure_environment(&subscription)?;
+        debug!("Logged in to Azure subscription {}", &subscription);
+        Ok(self)
+    }
+
+    pub fn retrieve_containerapps_environment(mut self) -> Result<Self> {
+        setup_extensions_and_preview_commands()?;
+        if self.resource_group.is_some() && self.containerapps_environment_name.is_some() {
+            self.containerapps_environment_resource_id = get_az_containerapp_environment(
+                self.get_resource_group()?,
+                self.get_containerapps_environment_name()?,
+            )?;
+        }
+        if self.containerapps_environment_resource_id.is_none() {
+            self.containerapps_environment_resource_id = Some(deploy_containerapps_env(
+                self.get_resource_group()?,
+                self.get_containerapps_environment_name()?,
+                self.get_location()?,
+            )?);
+        }
+        Ok(self)
+    }
+
+    pub fn containerapps_environment_id(&self) -> Result<String> {
+        if let Some(v) = self.containerapps_environment_resource_id.clone() {
+            Ok(v)
+        } else {
+            Err(anyhow!(
+                "Failed to retrieve the containerapps_environment_id"
+            ))
         }
     }
 

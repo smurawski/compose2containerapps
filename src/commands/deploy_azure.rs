@@ -16,16 +16,14 @@ impl DeployAzureCommand {
         self
     }
 
-    pub fn deploy(self, skip: bool) -> Result<Vec<String>> {
+    pub fn deploy(self) -> Result<Vec<String>> {
         let mut fqdns = Vec::new();
-        if !skip {
-            for config in self.configurations {
-                let name = config.configuration.name;
-                let resource_group = config.resource_group;
-                let yaml_path = config.path;
-                let fqdn = deploy_containerapps(&name, &resource_group, &yaml_path)?;
-                fqdns.push(fqdn);
-            }
+        for config in self.configurations {
+            let name = config.configuration.name;
+            let resource_group = config.resource_group;
+            let yaml_path = config.path;
+            let fqdn = deploy_containerapps(&name, &resource_group, &yaml_path)?;
+            fqdns.push(fqdn);
         }
         Ok(fqdns)
     }

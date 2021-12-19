@@ -21,7 +21,7 @@ pub struct ConvertComposeCommand {
     containerapps_configs: Vec<ConvertedComposeConfiguration>,
     resource_group: Option<String>,
     location: Option<String>,
-    kube_environment_id: Option<String>,
+    containerapps_environment_id: Option<String>,
 }
 
 impl ConvertComposeCommand {
@@ -49,8 +49,11 @@ impl ConvertComposeCommand {
         self
     }
 
-    pub fn with_kube_environment_id(mut self, kube_environment_id: Option<String>) -> Self {
-        self.kube_environment_id = kube_environment_id;
+    pub fn with_containerapps_environment_id(
+        mut self,
+        containerapps_environment_id: Option<&str>,
+    ) -> Self {
+        self.containerapps_environment_id = containerapps_environment_id.map(|v| v.to_string());
         self
     }
 
@@ -101,7 +104,7 @@ impl ConvertComposeCommand {
                 service,
                 &self.resource_group()?,
                 &self.location()?,
-                &self.kube_environment_id()?,
+                &self.containerapps_environment_id()?,
             )?;
 
             debug!(
@@ -146,8 +149,8 @@ impl ConvertComposeCommand {
         Ok(location)
     }
 
-    fn kube_environment_id(&self) -> Result<String> {
-        let kube_environment_id: String = match &self.kube_environment_id {
+    fn containerapps_environment_id(&self) -> Result<String> {
+        let containerapps_environment_id: String = match &self.containerapps_environment_id {
             Some(i) => {
                 debug!("ContainerApps Environment Id set to {}", &i);
                 i.to_string()
@@ -158,6 +161,6 @@ impl ConvertComposeCommand {
                 )
                 .interact_text()?,
         };
-        Ok(kube_environment_id)
+        Ok(containerapps_environment_id)
     }
 }

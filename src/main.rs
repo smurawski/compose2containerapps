@@ -25,36 +25,49 @@ lazy_static! {
 
 fn main() -> Result<()> {
     env_logger::init();
-    let matches = get_app_cli(&VERSION).get_matches();
+    let main_matches = get_app_cli(&VERSION).get_matches();
+    let input = main_matches.value_of("INPUT").unwrap();
+    let output = main_matches.value_of("OUTPUT").unwrap();
 
-    let skip_azure = matches.is_present("skip_azure");
+    if let Some(matches) = main_matches.subcommand_matches("convert") {
+        ConvertComposeCommand::default()
+            .with_compose_path(input)
+            .with_containerapps_path(output)
+            .with_resource_group(matches.value_of("resourceGroup"))
+            .with_location(matches.value_of("location"))
+            .with_containerapps_environment_id(matches.value_of("kubeEnvironmentId"))
+            .convert()?
+            .write()?;
+    };
 
-    let containerapps_environment_id = ValidateAzureCommand::default()
-        .with_subscription_name(matches.value_of("subscription_name"))
-        .with_resource_group(matches.value_of("resourceGroup"))
-        .with_containerapps_environment_name(matches.value_of("kubeEnvironmentName"))
-        .with_containerapps_environment_resource_id(matches.value_of("kubeEnvironmentId"))
-        .with_location(matches.value_of("location"))
-        .validate_azure_login(skip_azure)?
-        .retrieve_containerapps_environment(skip_azure)?
-        .containerapps_environment_id()?;
+    if let Some(matches) = main_matches.subcommand_matches("deploy") {
+        let containerapps_environment_id = ValidateAzureCommand::default()
+            .with_subscription_name(matches.value_of("subscription_name"))
+            .with_resource_group(matches.value_of("resourceGroup"))
+            .with_containerapps_environment_name(matches.value_of("kubeEnvironmentName"))
+            .with_containerapps_environment_resource_id(matches.value_of("kubeEnvironmentId"))
+            .with_location(matches.value_of("location"))
+            .validate_azure_login()?
+            .retrieve_containerapps_environment()?
+            .containerapps_environment_id()?;
 
-    let configurations = ConvertComposeCommand::default()
-        .with_compose_path(matches.value_of("INPUT").unwrap())
-        .with_containerapps_path(matches.value_of("OUTPUT").unwrap())
-        .with_resource_group(matches.value_of("resourceGroup"))
-        .with_location(matches.value_of("location"))
-        .with_kube_environment_id(containerapps_environment_id)
-        .convert()?
-        .write()?
-        .get_configurations();
+        let configurations = ConvertComposeCommand::default()
+            .with_compose_path(input)
+            .with_containerapps_path(output)
+            .with_resource_group(matches.value_of("resourceGroup"))
+            .with_location(matches.value_of("location"))
+            .with_containerapps_environment_id(Some(&containerapps_environment_id))
+            .convert()?
+            .write()?
+            .get_configurations();
 
-    DeployAzureCommand::default()
-        .with_configurations(configurations)
-        .deploy(skip_azure)?
-        .iter()
-        .map(|fqdn| println!("Deployed: https://{}", fqdn))
-        .for_each(drop);
+        DeployAzureCommand::default()
+            .with_configurations(configurations)
+            .deploy()?
+            .iter()
+            .map(|fqdn| println!("Deployed: https://{}", fqdn))
+            .for_each(drop);
+    }
 
     Ok(())
 }

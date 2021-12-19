@@ -24,14 +24,14 @@ test:
 run composeFile=defaultComposeFile: bicep-build
     cargo run -- {{composeFile}}
 
-run-skip-azure composeFile=defaultComposeFile containerappsFile=defaultContainerAppsFile: 
-    cargo run -- {{composeFile}} {{containerappsFile}} --skip-azure
+run-convert composeFile=defaultComposeFile containerappsFile=defaultContainerAppsFile: 
+    cargo run -- {{composeFile}} {{containerappsFile}} convert
 
-run-multiple-service: (run-skip-azure "./test/docker-compose-multiple-service.yml")
+run-multiple-service: (run-convert "./test/docker-compose-multiple-service.yml")
 
-run-gamut: run-skip-azure run-multiple-service run-multiple-port
+run-multiple-port: (run-convert "./test/docker-compose-multiple-service-multiple-ports.yml" "ports-containerapps.yml")
 
-run-multiple-port: (run-skip-azure "./test/docker-compose-multiple-service-multiple-ports.yml" "ports-containerapps.yml")
+run-gamut: run-convert run-multiple-service run-multiple-port
 
 bicep-build:
     az bicep build --file ./src/support/main.bicep --outdir ./src/support/
