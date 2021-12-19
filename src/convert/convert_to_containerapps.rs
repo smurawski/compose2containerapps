@@ -1,3 +1,4 @@
+use crate::commands::ContainerAppsConfigurationData;
 use crate::compose::Service;
 use crate::containerapps::ContainerAppConfig;
 use crate::VERBOSE;
@@ -8,9 +9,7 @@ use super::get_properties;
 pub fn convert_to_containerapps(
     service_name: &str,
     service: Service,
-    resource_group: &str,
-    location: &str,
-    kube_environment_id: &str,
+    containerapps_configuration_data: ContainerAppsConfigurationData,
 ) -> Result<ContainerAppConfig> {
     if *VERBOSE {
         println!();
@@ -20,13 +19,14 @@ pub fn convert_to_containerapps(
         println!();
     };
     let config = ContainerAppConfig {
-        kind: "containerapp".to_string(),
+        kind: Some("containerapp".to_string()),
+        api_version: None,
         name: service_name.to_owned(),
-        resource_group: resource_group.to_owned(),
-        location: location.to_owned(),
+        resource_group: Some(containerapps_configuration_data.resource_group.to_owned()),
+        location: containerapps_configuration_data.location.to_owned(),
         resource_type: "Microsoft.Web/containerApps".to_string(),
         tags: None,
-        properties: get_properties(kube_environment_id.to_owned(), &service)?,
+        properties: get_properties(&containerapps_configuration_data, service_name, &service)?,
     };
 
     Ok(config)

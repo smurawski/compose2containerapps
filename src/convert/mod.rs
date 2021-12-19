@@ -17,6 +17,7 @@ pub use get_template_from_service::*;
 #[cfg(test)]
 pub mod tests {
     use super::convert_to_containerapps;
+    use crate::commands::ContainerAppsConfigurationData;
     use crate::compose::{Compose, Service};
     use crate::containerapps::*;
     use std::fs::File;
@@ -40,13 +41,13 @@ pub mod tests {
     }
 
     pub fn get_converted_containerapps_config() -> ContainerAppConfig {
+        let cacd = ContainerAppsConfigurationData {
+            resource_group: "myresourcegroup",
+            location: "northeurope",
+            containerapps_environment_id: "/subscriptions/mysubscription/resourceGroups/myresourcegroup/providers/Microsoft.Web/kubeEnvironments/myenvironment",
+            transport: Transport::default(),
+        };
         let compose_config = get_service_from_docker_compose_file();
-        convert_to_containerapps(
-            "mycontainerapp",
-            compose_config,
-            "myresourcegroup",
-            "northeurope",
-            "/subscriptions/mysubscription/resourceGroups/myresourcegroup/providers/Microsoft.Web/kubeEnvironments/myenvironment"
-        ).unwrap()
+        convert_to_containerapps("mycontainerapp", compose_config, cacd).unwrap()
     }
 }

@@ -5,7 +5,7 @@ use anyhow::Result;
 use dialoguer::Input;
 use log::debug;
 
-pub fn get_container_from_service(service: &Service) -> Result<Container> {
+pub fn get_container_from_service(service_name: &str, service: &Service) -> Result<Container> {
     if *VERBOSE {
         println!();
         println!("The container template includes the container image, an optional name,");
@@ -18,7 +18,9 @@ pub fn get_container_from_service(service: &Service) -> Result<Container> {
     }
 
     if let Some(name) = &service.container_name {
-        container.name = Some(name.value()?.to_string());
+        container.name = name.value()?.to_string();
+    } else {
+        container.name = service_name.to_owned();
     }
 
     if !service.environment.is_empty() {
@@ -104,10 +106,7 @@ mod tests {
             .containers
             .first()
             .unwrap();
-        assert_eq!(
-            new_ghost_container.name.clone().unwrap(),
-            reference_ghost_container.name.clone().unwrap()
-        );
+        assert_eq!(new_ghost_container.name, reference_ghost_container.name);
     }
 
     #[test]

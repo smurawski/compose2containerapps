@@ -24,34 +24,90 @@ This app should build with minimal dependencies.  It's been tested with Rust 1.5
 
 The application has three mandatory parameters and two optional ones (that have default values).  There are environment variables that can be provided in place of CLI arguments.
 
+`compose2containerapp --help`
+
 ```
-compose2containerapps v0.3.1
+compose2containerapps v0.5.0
 Steven Murawski <steven.murawski@microsoft.com>
 Converts Docker Compose files to Azure ContainerApps yaml configuration files
 
 USAGE:
-    compose2containerapp.exe [FLAGS] --containerapps-environment-id <kubeEnvironmentId> --location <location> --resource-group <resourceGroup> [ARGS]
+    compose2containerapp.exe [FLAGS] [ARGS] [SUBCOMMAND]
 
 FLAGS:
     -h, --help       Prints help information
     -V, --version    Prints version information
-    -v, --verbose    Resource group location for the ContainerApps environment.
+    -v, --verbose    Enable verbose output.
+
+ARGS:
+    <INPUT>     Path to read the Docker Compose yaml configuration file. [default: ./docker-compose.yml]
+    <OUTPUT>    Base file name to write the Azure ContainerApps yaml configuration files.  Output file name will be
+                prefixed with the service name. [default: containerapps.yml]
+
+SUBCOMMANDS:
+    convert    Converts a Docker Compose file into Azure ContainerApps configurations.
+    deploy     Deploys a Docker Compose file into Azure ContainerApps
+    help       Prints this message or the help of the given subcommand(s)
+```
+
+`compose2containerapp convert --help`
+
+
+```
+compose2containerapp.exe-convert
+Converts a Docker Compose file into Azure ContainerApps configurations.
+
+USAGE:
+    compose2containerapp.exe convert [OPTIONS]
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
 
 OPTIONS:
     -i, --containerapps-environment-id <kubeEnvironmentId>
             Resource ID for the ContainerApps environment. [env: CONTAINERAPPS_ENVIRONMENT_ID=]
 
     -l, --location <location>
-            Resource group location for the ContainerApps environment. [env: LOCATION=]
-
+            Resource group location for the ContainerApps environment. [env: LOCATION=]  [possible values: eastus,
+            westus, centralus]
     -g, --resource-group <resourceGroup>
             Resource Group for the ContainerApps environment. [env: RESOURCE_GROUP=]
 
-
-ARGS:
-    <INPUT>     Path to read the Docker Compose yaml configuration file. [default: ./docker-compose.yml]
-    <OUTPUT>    Base file name to write the Azure ContainerApps yaml configuration files.  Output file name will be
-                prefixed with the service name. [default: containerapps.yml]
+        --transport <transport>
+            ContainerApps transport. [possible values: Auto, Http, Http2]
 ```
+
+`compose2containerapp deploy --help`
+
+```
+compose2containerapp.exe-deploy
+Deploys a Docker Compose file into Azure ContainerApps
+
+USAGE:
+    compose2containerapp.exe deploy [OPTIONS]
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+    -i, --containerapps-environment-id <kubeEnvironmentId>
+            Resource ID for the ContainerApps environment. [env: CONTAINERAPPS_ENVIRONMENT_ID=]
+
+    -l, --location <location>
+            Resource group location for the ContainerApps environment. [env: LOCATION=]  [possible values: eastus,
+            westus, centralus]
+    -g, --resource-group <resourceGroup>
+            Resource Group for the ContainerApps environment. [env: RESOURCE_GROUP=]
+
+        --subscription-name <subscription_name>
+            Resource group location for the ContainerApps environment. [env: AZURE_SUBSCRIPTION_NAME=]
+
+        --transport <transport>
+            ContainerApps transport. [possible values: Auto, Http, Http2]
+
+```
+
 
 ![Running the app](https://github.com/smurawski/compose2containerapps/raw/main/compose2containerapps.gif)

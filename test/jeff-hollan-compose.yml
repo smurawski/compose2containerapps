@@ -1,0 +1,21 @@
+version: '3'
+services:
+  backend:
+    image: ghcr.io/jeffhollan/grpc-sample-go/grpc-backend:main
+    platform: linux/amd64
+    build:
+      context: ./
+      dockerfile: ./grpc-backend/Dockerfile
+    expose:
+      - 50051
+  frontend:
+    image: ghcr.io/jeffhollan/grpc-sample-go/https-frontend:main
+    platform: linux/amd64
+    build:
+      context: ./
+      dockerfile: ./https-frontend/Dockerfile
+    ports:
+      - 8080:8050
+    environment:
+      - GRPC_SERVER_ADDRESS=${BACKEND_FQDN}:443
+  
