@@ -1,9 +1,11 @@
+use crate::azure::*;
 use crate::compose::{read_compose_file, Compose};
-use crate::containerapps::{write_to_containerapps_file, ContainerAppConfig};
+use crate::containerapps::{write_to_containerapps_file, write_containerapps_arm_template, ContainerAppConfig, Transport};
 use crate::convert::convert_to_containerapps;
 use anyhow::Result;
 use dialoguer::Input;
 use log::{debug, trace};
+use std::env;
 use std::path::PathBuf;
 use std::str::FromStr;
 
@@ -12,6 +14,14 @@ pub struct ConvertedComposeConfiguration {
     pub configuration: ContainerAppConfig,
     pub resource_group: String,
     pub path: PathBuf,
+    pub url: Option<String>,
+}
+
+pub struct ContainerAppsConfigurationData<'a> {
+    pub resource_group: &'a str,
+    pub location: &'a str,
+    pub containerapps_environment_id: &'a str,
+    pub transport: Transport,
 }
 
 #[derive(Default)]
@@ -22,6 +32,8 @@ pub struct ConvertComposeCommand {
     resource_group: Option<String>,
     location: Option<String>,
     containerapps_environment_id: Option<String>,
+    transport: Transport,
+    deploy_azure: bool,
 }
 
 impl ConvertComposeCommand {
@@ -54,6 +66,20 @@ impl ConvertComposeCommand {
         containerapps_environment_id: Option<&str>,
     ) -> Self {
         self.containerapps_environment_id = containerapps_environment_id.map(|v| v.to_string());
+        self
+    }
+
+    pub fn with_transport(mut self, transport: Option<&str>) -> Self {
+        if let Some(t) = transport {
+            self.transport = Transport::from_str(t).unwrap();
+        } else {
+            self.transport = Transport::default();
+        };
+        self
+    }
+
+    pub fn with_deploy_azure(mut self, deploy_azure: bool) -> Self {
+        self.deploy_azure = deploy_azure;
         self
     }
 
@@ -98,27 +124,45 @@ impl ConvertComposeCommand {
                 &service_name,
                 &self.containerapps_path.display()
             ));
-
-            let container_file = convert_to_containerapps(
-                &service_name,
-                service,
-                &self.resource_group()?,
-                &self.location()?,
-                &self.containerapps_environment_id()?,
-            )?;
+            let containerapps_configuration_data = ContainerAppsConfigurationData {
+                resource_group: &self.resource_group()?,
+                location: &self.location()?,
+                containerapps_environment_id: &self.containerapps_environment_id()?,
+                transport: self.transport()?,
+            };
+            let container_file =
+                convert_to_containerapps(&service_name, service, containerapps_configuration_data)?;
 
             debug!(
                 "Writing a ContainerApps configuration to {}.",
                 &new_path.display()
             );
-
+            let mut fqdn = None;
+            if self.deploy_azure {
+                write_to_containerapps_file(&new_path, &container_file)?;
+                write_containerapps_arm_template(&new_path, &container_file)?;
+                let service_fqdn =
+                    deploy_containerapps(&service_name, &self.resource_group()?, &new_path)?;
+                let env_var_name = format!("{}_FQDN", &service_name.to_uppercase());
+                debug!(
+                    "Setting enviroment variable {} to {}",
+                    &env_var_name, &service_fqdn
+                );
+                env::set_var(&env_var_name, &service_fqdn);
+                fqdn = Some(service_fqdn);
+            };
             containerapps.push(ConvertedComposeConfiguration {
                 resource_group: self.resource_group()?.to_owned(),
                 path: new_path,
                 configuration: container_file,
+                url: fqdn,
             });
         }
         Ok(containerapps)
+    }
+
+    fn transport(&self) -> Result<Transport> {
+        Ok(self.transport.clone())
     }
 
     fn resource_group(&self) -> Result<String> {

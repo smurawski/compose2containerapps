@@ -15,6 +15,11 @@ pub struct IngressConfiguration {
     #[serde(default)]
     pub transport: Transport,
 }
+impl IngressConfiguration {
+    pub fn new() -> Self {
+        Default::default()
+    }
+}
 impl Default for IngressConfiguration {
     fn default() -> IngressConfiguration {
         IngressConfiguration {

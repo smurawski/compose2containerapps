@@ -5,7 +5,7 @@ use anyhow::Result;
 
 use super::get_container_from_service;
 
-pub fn get_template_from_service(service: &Service) -> Result<Template> {
+pub fn get_template_from_service(service_name: &str, service: &Service) -> Result<Template> {
     if *VERBOSE {
         println!();
         println!("The template defines the container images and scaling configuration.");
@@ -16,7 +16,7 @@ pub fn get_template_from_service(service: &Service) -> Result<Template> {
         println!();
     };
     let template = Template {
-        containers: vec![get_container_from_service(service)?],
+        containers: vec![get_container_from_service(service_name, service)?],
         revision_suffix: None,
         scale: ScaleConfiguration::default(),
     };

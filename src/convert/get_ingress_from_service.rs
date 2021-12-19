@@ -1,3 +1,4 @@
+use crate::commands::ContainerAppsConfigurationData;
 use crate::compose::{PortMapping, Ports, Protocol, Service};
 use crate::containerapps::IngressConfiguration;
 use crate::VERBOSE;
@@ -5,7 +6,10 @@ use anyhow::Result;
 use dialoguer::FuzzySelect;
 use log::{debug, trace, warn};
 
-pub fn get_ingress_from_service(service: &Service) -> Result<IngressConfiguration> {
+pub fn get_ingress_from_service(
+    containerapps_configuration_data: &ContainerAppsConfigurationData,
+    service: &Service,
+) -> Result<IngressConfiguration> {
     trace!("Creating the ingress configuration.");
     if *VERBOSE {
         println!();
@@ -20,7 +24,9 @@ pub fn get_ingress_from_service(service: &Service) -> Result<IngressConfiguratio
         println!("make sure you read https://aka.ms/containerapps/ingress#ip-addresses-and-domain-names.");
         println!();
     };
-    let mut ingress = IngressConfiguration::default();
+    let mut ingress = IngressConfiguration::new();
+    ingress.transport = containerapps_configuration_data.transport.clone();
+
     if !service.ports.is_empty() {
         debug!("Service had ports defined.");
         let expanded_ports = expand_service_ports(service);

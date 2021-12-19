@@ -10,6 +10,14 @@ arg_enum! {
     }
 }
 
+arg_enum! {
+    pub enum Transport {
+        Auto,
+        Http,
+        Http2
+    }
+}
+
 pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
     let standard_args = standard_args();
     App::new("compose2containerapps")
@@ -21,22 +29,24 @@ pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
         .subcommand(deploy_subcommand())
 }
 
+fn convert_subcommand<'a, 'b>() -> App<'a, 'b> {
+    SubCommand::with_name("convert")
+        .about("Converts a Docker Compose file into Azure ContainerApps configurations.")
+        .arg(containerapps_environment_id_arg())
+        .arg(resource_group_name_arg())
+        .arg(location_arg())
+        .arg(transport_arg())
+}
+
 fn deploy_subcommand<'a, 'b>() -> App<'a, 'b> {
     SubCommand::with_name("deploy")
         .about("Deploys a Docker Compose file into Azure ContainerApps")
         .arg(containerapps_environment_id_arg())
         .arg(containerapps_environment_name_arg())
-        .arg(resource_group_name_arg())
-        .arg(location_arg())
         .arg(subscription_name_arg())
-}
-
-fn convert_subcommand<'a, 'b>() -> App<'a, 'b> {
-    SubCommand::with_name("convert")
-        .about("Converts a Docker Compose file into Azure ContainerApps configurations.")
-        .arg(containerapps_environment_name_arg())
         .arg(resource_group_name_arg())
         .arg(location_arg())
+        .arg(transport_arg())
 }
 
 fn standard_args<'a, 'b>() -> Vec<Arg<'a, 'b>> {
@@ -109,4 +119,12 @@ fn subscription_name_arg<'a, 'b>() -> Arg<'a, 'b> {
         .help("Resource group location for the ContainerApps environment.")
         .takes_value(true)
         .env("AZURE_SUBSCRIPTION_NAME")
+}
+
+fn transport_arg<'a, 'b>() -> Arg<'a, 'b> {
+    Arg::with_name("transport")
+        .long("transport")
+        .help("ContainerApps transport.")
+        .takes_value(true)
+        .possible_values(&Transport::variants())
 }

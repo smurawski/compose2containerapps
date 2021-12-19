@@ -1,3 +1,4 @@
+use crate::commands::ContainerAppsConfigurationData;
 use crate::compose::Service;
 use crate::containerapps::{Configuration, RevisionMode};
 use anyhow::Result;
@@ -6,7 +7,10 @@ use super::get_ingress_from_service;
 use super::get_secrets_from_service;
 use crate::VERBOSE;
 
-pub fn get_configuration_from_service(service: &Service) -> Result<Configuration> {
+pub fn get_configuration_from_service(
+    containerapps_configuration_data: &ContainerAppsConfigurationData,
+    service: &Service,
+) -> Result<Configuration> {
     if *VERBOSE {
         println!();
         println!("The ContainerApps container configuration is defined https://aka.ms/containerapps/spec#propertiesconfiguration.");
@@ -22,7 +26,7 @@ pub fn get_configuration_from_service(service: &Service) -> Result<Configuration
     }
     let config = Configuration {
         secrets: get_secrets_from_service(service)?,
-        ingress: get_ingress_from_service(service)?,
+        ingress: get_ingress_from_service(containerapps_configuration_data, service)?,
         active_revisions_mode: RevisionMode::default(),
         registries: Vec::new(),
     };

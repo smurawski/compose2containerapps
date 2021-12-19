@@ -36,6 +36,7 @@ fn main() -> Result<()> {
             .with_resource_group(matches.value_of("resourceGroup"))
             .with_location(matches.value_of("location"))
             .with_containerapps_environment_id(matches.value_of("kubeEnvironmentId"))
+            .with_transport(matches.value_of("transport"))
             .convert()?
             .write()?;
     };
@@ -51,21 +52,20 @@ fn main() -> Result<()> {
             .retrieve_containerapps_environment()?
             .containerapps_environment_id()?;
 
-        let configurations = ConvertComposeCommand::default()
+        ConvertComposeCommand::default()
             .with_compose_path(input)
             .with_containerapps_path(output)
             .with_resource_group(matches.value_of("resourceGroup"))
             .with_location(matches.value_of("location"))
             .with_containerapps_environment_id(Some(&containerapps_environment_id))
+            .with_transport(matches.value_of("transport"))
+            .with_deploy_azure(true)
             .convert()?
-            .write()?
-            .get_configurations();
-
-        DeployAzureCommand::default()
-            .with_configurations(configurations)
-            .deploy()?
+            .get_configurations()
             .iter()
-            .map(|fqdn| println!("Deployed: https://{}", fqdn))
+            .map(|configuration| {
+                println!("Deployed: https://{}", &configuration.url.as_ref().unwrap())
+            })
             .for_each(drop);
     }
 
