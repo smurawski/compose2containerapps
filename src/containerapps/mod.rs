@@ -21,7 +21,10 @@ pub fn write_to_containerapps_file(file_path: &Path, config: &ContainerAppConfig
     Ok(())
 }
 
-pub fn write_containerapps_arm_template(file_path: &Path, config: &ContainerAppConfig) -> Result<()> {
+pub fn write_containerapps_arm_template(
+    file_path: &Path,
+    config: &ContainerAppConfig,
+) -> Result<()> {
     let mut arm_template_outline = ArmWrapper::default();
 
     let mut container_config = config.clone();
@@ -29,7 +32,7 @@ pub fn write_containerapps_arm_template(file_path: &Path, config: &ContainerAppC
     container_config.api_version = Some("2021-03-01".to_string());
     container_config.resource_group = None;
     arm_template_outline.resources.push(container_config);
-    arm_template_outline.outputs.containerapp_fqdn = OutputValue::new(&config.name); 
+    arm_template_outline.outputs.containerapp_fqdn = OutputValue::new(&config.name);
 
     let output_content = serde_json::to_string(&arm_template_outline)?;
     let mut file = File::create(file_path)
@@ -40,9 +43,9 @@ pub fn write_containerapps_arm_template(file_path: &Path, config: &ContainerAppC
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ArmWrapper {
-    #[serde(rename="$schema")]
+    #[serde(rename = "$schema")]
     pub schema: &'static str,
-    #[serde(rename="contentVersion")]
+    #[serde(rename = "contentVersion")]
     pub content_version: &'static str,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub resources: Vec<ContainerAppConfig>,
@@ -51,7 +54,8 @@ pub struct ArmWrapper {
 impl Default for ArmWrapper {
     fn default() -> ArmWrapper {
         ArmWrapper {
-            schema: "https://schema.management.azure.com/schemas/2019-08-01/deploymentTemplate.json#",
+            schema:
+                "https://schema.management.azure.com/schemas/2019-08-01/deploymentTemplate.json#",
             content_version: "1.0.0.0",
             resources: Vec::new(),
             outputs: OutputWrapper::default(),
@@ -62,14 +66,14 @@ impl Default for ArmWrapper {
 #[derive(Default, Debug, Serialize, Deserialize, Clone)]
 pub struct OutputWrapper {
     #[serde(rename = "containerappFqdn")]
-    pub containerapp_fqdn: OutputValue
+    pub containerapp_fqdn: OutputValue,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct OutputValue {
     #[serde(rename = "type")]
     pub output_type: String,
-    pub value: String
+    pub value: String,
 }
 impl OutputValue {
     pub fn new(service_name: &str) -> OutputValue {

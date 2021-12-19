@@ -1,6 +1,8 @@
 use crate::azure::*;
 use crate::compose::{read_compose_file, Compose};
-use crate::containerapps::{write_to_containerapps_file, write_containerapps_arm_template, ContainerAppConfig, Transport};
+use crate::containerapps::{
+    write_containerapps_arm_template, write_to_containerapps_file, ContainerAppConfig, Transport,
+};
 use crate::convert::convert_to_containerapps;
 use anyhow::Result;
 use dialoguer::Input;
@@ -141,7 +143,8 @@ impl ConvertComposeCommand {
             if self.deploy_azure {
                 let json_file_path = new_path.to_path_buf().with_extension("json");
                 write_containerapps_arm_template(&json_file_path, &container_file)?;
-                let service_fqdn = deploy_containerapps(&service_name, &self.resource_group()?, &json_file_path)?;
+                let service_fqdn =
+                    deploy_containerapps(&service_name, &self.resource_group()?, &json_file_path)?;
                 let env_var_name = format!("{}_FQDN", &service_name.to_uppercase());
                 debug!(
                     "Setting enviroment variable {} to {}",
