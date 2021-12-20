@@ -5,6 +5,7 @@ use anyhow::{Error, Result};
 use custom_error::custom_error;
 use log::{debug, trace};
 use regex::Regex;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::fs::{remove_file, File};
 use std::io::{BufRead, BufReader, Write};
@@ -14,6 +15,7 @@ custom_error! {
     pub AzCliError
     Unknown = "unknown error",
     CliMissing = "Unable to find the Azure CLI.",
+    NoParameters = "Command called without required parameters.",
     InvalidJsonError{source: std::string::FromUtf8Error} = "Failed to convert the output.",
     RegexError{source: regex::Error} = "Regex problem.",
     JsonDeserializationError{source: serde_json::Error} = "JSON error",
@@ -69,6 +71,12 @@ pub fn setup_extensions_and_preview_commands() -> Result<()> {
         .with_args(vec!["extension", "add", "--source", extension_url, "--yes"])
         .run()?;
 
+    trace!("Enabling the extension for az log-analytics.");
+    let _ = AzCliCommand::default()
+        .with_name("Enable Preview Extension.")
+        .with_args(vec!["extension", "add", "--name", "log-anaytics", "--yes"])
+        .run()?;
+
     trace!("Registering the Microsoft.Web provider.");
     let _ = AzCliCommand::default()
         .with_name("Register Microsoft.Web provider.")
@@ -77,21 +85,67 @@ pub fn setup_extensions_and_preview_commands() -> Result<()> {
     Ok(())
 }
 
-pub fn get_az_containerapp_environment(
+pub fn get_az_containerapp_environment_resource_id(
     resource_group: &str,
     environment_name: &str,
 ) -> Result<Option<String>> {
-    let command = AzCliCommand::default()
-        .with_name(format!("Get Az ContainerApps Environment {}", environment_name).as_str())
-        .with_args(vec![
+    let json = get_az_containerapp_environment(Some(resource_group), Some(environment_name), None)?;
+
+    if let Some(resource_id) = json["id"].as_str() {
+        debug!("az containerapp show output: {:?}", resource_id);
+        Ok(Some(resource_id.to_owned()))
+    } else {
+        Ok(None)
+    }
+}
+
+pub fn get_az_containerapp_environment_log_workspace_id(
+    resource_group: Option<&str>,
+    environment_name: Option<&str>,
+    environment_id: Option<&str>,
+) -> Result<Option<String>> {
+    let json = get_az_containerapp_environment(resource_group, environment_name, environment_id)?;
+
+    if let Some(log_workspace_id) =
+        json["appLogsConfiguration"]["logAnalyticsConfiguration"]["customerId"].as_str()
+    {
+        debug!("az containerapp show output: {:?}", log_workspace_id);
+        Ok(Some(log_workspace_id.to_owned()))
+    } else {
+        Ok(None)
+    }
+}
+
+fn get_az_containerapp_environment(
+    resource_group: Option<&str>,
+    environment_name: Option<&str>,
+    environment_id: Option<&str>,
+) -> Result<Value> {
+    let args = if resource_group.is_some() && environment_name.is_some() {
+        vec![
             "containerapp",
             "env",
             "show",
             "--resource-group",
-            resource_group,
+            resource_group.unwrap(),
             "--name",
-            environment_name,
-        ])
+            environment_name.unwrap(),
+        ]
+    } else if environment_id.is_some() {
+        vec![
+            "containerapp",
+            "env",
+            "show",
+            "--ids",
+            environment_id.unwrap(),
+        ]
+    } else {
+        return Err(Error::new(AzCliError::NoParameters));
+    };
+
+    let command = AzCliCommand::default()
+        .with_name("Retrieve existing Az ContainerApps Environment")
+        .with_args(args)
         .run()?;
 
     let stdout = command.get_stdout().unwrap();
@@ -100,14 +154,55 @@ pub fn get_az_containerapp_environment(
         Ok(json_value) => json_value,
         Err(_) => Value::default(),
     };
+    Ok(json)
+}
 
-    if let Some(json_resource_id) = json.get("id") {
-        let resource_id = json_resource_id.as_str().unwrap();
-        debug!("az containerapp show output: {:?}", resource_id);
-        Ok(Some(resource_id.to_owned()))
-    } else {
-        Ok(None)
+#[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq, PartialOrd, Ord)]
+pub struct AzMonitorLog {
+    #[serde(rename = "TimeGenerated")]
+    pub time_generated: String,
+    #[serde(rename = "ContainerAppName")]
+    pub containerapp_name: String,
+    #[serde(rename = "TableName")]
+    pub table_name: String,
+    #[serde(rename = "Log")]
+    pub log: String,
+}
+
+pub fn get_az_monitor_logs(
+    client_id: &str,
+    service_name: &Option<String>,
+) -> Result<Vec<AzMonitorLog>> {
+    let mut query = String::new();
+    query.push_str("ContainerAppConsoleLogs_CL");
+    query.push_str(" | project ContainerAppName=ContainerAppName_s, Log=Log_s, TimeGenerated");
+    if let Some(name) = service_name {
+        query.push_str(" | where ContainerAppName == ");
+        query.push_str(name);
     }
+    let args = vec![
+        "monitor",
+        "log-analytics",
+        "query",
+        "--workspace",
+        client_id,
+        "--analytics-query",
+        &query,
+    ];
+
+    let command = AzCliCommand::default()
+        .with_name("Retrieve existing Az ContainerApps Environment")
+        .with_args(args)
+        .run()?;
+
+    let stdout = command.get_stdout().unwrap();
+
+    let logs: Vec<AzMonitorLog> = match serde_json::from_str(&stdout) {
+        Ok(json_value) => json_value,
+        Err(_) => Vec::new(),
+    };
+
+    Ok(logs)
 }
 
 pub fn deploy_containerapps_env<'a>(

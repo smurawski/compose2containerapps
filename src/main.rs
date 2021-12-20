@@ -26,13 +26,11 @@ lazy_static! {
 fn main() -> Result<()> {
     env_logger::init();
     let main_matches = get_app_cli(&VERSION).get_matches();
-    let input = main_matches.value_of("INPUT").unwrap();
-    let output = main_matches.value_of("OUTPUT").unwrap();
 
     if let Some(matches) = main_matches.subcommand_matches("convert") {
         ConvertComposeCommand::default()
-            .with_compose_path(input)
-            .with_containerapps_path(output)
+            .with_compose_path(matches.value_of("INPUT").unwrap())
+            .with_containerapps_path(matches.value_of("OUTPUT").unwrap())
             .with_resource_group(matches.value_of("resourceGroup"))
             .with_location(matches.value_of("location"))
             .with_containerapps_environment_id(matches.value_of("kubeEnvironmentId"))
@@ -53,8 +51,8 @@ fn main() -> Result<()> {
             .containerapps_environment_id()?;
 
         ConvertComposeCommand::default()
-            .with_compose_path(input)
-            .with_containerapps_path(output)
+            .with_compose_path(matches.value_of("INPUT").unwrap())
+            .with_containerapps_path(matches.value_of("OUTPUT").unwrap())
             .with_resource_group(matches.value_of("resourceGroup"))
             .with_location(matches.value_of("location"))
             .with_containerapps_environment_id(Some(&containerapps_environment_id))
@@ -71,8 +69,12 @@ fn main() -> Result<()> {
 
     if let Some(matches) = main_matches.subcommand_matches("logs") {
         RetrieveLogsCommand::default()
-            .with_log_analytics_workspace_id(matches.value_of("log_analytics_workspace_id"))
-
+            .with_log_analytics_client_id(matches.value_of("log_analytics_client_id"))
+            .with_resource_group(matches.value_of("resourceGroup"))
+            .with_name(matches.value_of("containerapp_name"))
+            .with_containerapps_environment_name(matches.value_of("kubeEnvironmentName"))
+            .with_containerapps_environment_resource_id(matches.value_of("kubeEnvironmentId"))
+            .run()?;
     }
 
     Ok(())

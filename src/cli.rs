@@ -19,19 +19,20 @@ arg_enum! {
 }
 
 pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
-    let standard_args = standard_args();
     App::new("compose2containerapps")
         .version(&*version)
         .author("Steven Murawski <steven.murawski@microsoft.com>")
         .about("Converts Docker Compose files to Azure ContainerApps yaml configuration files")
-        .args(&standard_args)
         .subcommand(convert_subcommand())
         .subcommand(deploy_subcommand())
+        .subcommand(logs_subcommand())
 }
 
 fn convert_subcommand<'a, 'b>() -> App<'a, 'b> {
+    let standard_args = standard_args();
     SubCommand::with_name("convert")
         .about("Converts a Docker Compose file into Azure ContainerApps configurations.")
+        .args(&standard_args)
         .arg(containerapps_environment_id_arg())
         .arg(resource_group_name_arg())
         .arg(location_arg())
@@ -39,14 +40,25 @@ fn convert_subcommand<'a, 'b>() -> App<'a, 'b> {
 }
 
 fn deploy_subcommand<'a, 'b>() -> App<'a, 'b> {
+    let standard_args = standard_args();
     SubCommand::with_name("deploy")
         .about("Deploys a Docker Compose file into Azure ContainerApps")
+        .args(&standard_args)
         .arg(containerapps_environment_id_arg())
         .arg(containerapps_environment_name_arg())
         .arg(subscription_name_arg())
         .arg(resource_group_name_arg())
         .arg(location_arg())
         .arg(transport_arg())
+}
+
+fn logs_subcommand<'a, 'b>() -> App<'a, 'b> {
+    SubCommand::with_name("logs")
+        .about("Retrieves Azure ContainerApps Logs")
+        .arg(containerapps_environment_client_id_arg())
+        .arg(containerapps_environment_id_arg())
+        .arg(containerapps_environment_name_arg())
+        .arg(resource_group_name_arg())
 }
 
 fn standard_args<'a, 'b>() -> Vec<Arg<'a, 'b>> {
@@ -73,9 +85,8 @@ fn containerapps_environment_name_arg<'a, 'b>() -> Arg<'a, 'b> {
         .long("containerapps-environment-name")
         .short("n")
         .help("Resource Name for the ContainerApps environment.")
-        .env("CONTAINERAPPS_ENVIRONMENT_NAME")
+        .env("CONTAINERAPPS_ENVIRONMENT")
         .takes_value(true)
-        .hidden(true)
 }
 
 fn containerapps_environment_id_arg<'a, 'b>() -> Arg<'a, 'b> {
@@ -90,6 +101,16 @@ fn containerapps_environment_id_arg<'a, 'b>() -> Arg<'a, 'b> {
             "kube-environment-id",
         ])
         .env("CONTAINERAPPS_ENVIRONMENT_ID")
+        .takes_value(true)
+}
+
+fn containerapps_environment_client_id_arg<'a, 'b>() -> Arg<'a, 'b> {
+    Arg::with_name("log_analytics_client_id")
+        .long("log-analtyics-client-id")
+        .short("c")
+        .help("Resource ID for the ContainerApps environment.")
+        .aliases(&["client-id", "workspace-id"])
+        .env("LOG_ANALYTICS_WORKSPACE_CLIENT_ID")
         .takes_value(true)
 }
 
