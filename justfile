@@ -2,12 +2,12 @@ set dotenv-load := true
 set shell := ["pwsh", "-c"]
 
 defaultComposeFile       := "./test/docker-compose.yml"
-defaultContainerAppsFile := "skipazure-containerapps.yml"
+defaultContainerAppsFile := "containerapps.yml"
 defaultAction            := "convert"
 
-default: lint clippy check test
+default: build-bicep lint clippy check test
 
-try: bicep-build && check clippy test
+try: && check clippy test
     cargo fmt
 
 lint:
@@ -22,13 +22,14 @@ check:
 test:
     cargo test
 
-run composeFile=defaultComposeFile action=defaultAction:
-   cargo run -- {{composeFile}} {{defaultAction}}
+run action *FLAGS: build-bicep
+    cargo run -- {{action}} {{FLAGS}}
 
-run-hollan:
-    cargo run -- "./test/jeff-hollan-compose.yml" deploy --transport Http2
+run-logs: (run "logs")
 
-bicep-build:
+run-hollan: (run "./test/jeff-hollan-compose.yml" "deploy" "--transport Http2") 
+
+build-bicep:
     az bicep build --file ./src/support/main.bicep --outdir ./src/support/
 
 cleanup:
@@ -40,5 +41,12 @@ cleanup:
 
 show:
     -az group show --name $env:RESOURCE_GROUP
+
+setup-az-containerapp-cli:
+    -az extension add --source https://workerappscliextension.blob.core.windows.net/azure-cli-extension/containerapp-0.2.0-py2.py3-none-any.whl -y
+    -az provider register --namespace Microsoft.Web
+
+get-environment:
+    -az containerapp env show --resource-group $env:RESOURCE_GROUP --name $env:CONTAINERAPPS_ENVIRONMENT_NAME
 
     

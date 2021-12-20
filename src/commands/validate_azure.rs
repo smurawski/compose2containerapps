@@ -64,10 +64,11 @@ impl<'a> ValidateAzureCommand<'a> {
     pub fn retrieve_containerapps_environment(mut self) -> Result<Self> {
         setup_extensions_and_preview_commands()?;
         if self.resource_group.is_some() && self.containerapps_environment_name.is_some() {
-            self.containerapps_environment_resource_id = get_az_containerapp_environment(
-                self.get_resource_group()?,
-                self.get_containerapps_environment_name()?,
-            )?;
+            self.containerapps_environment_resource_id =
+                get_az_containerapp_environment_resource_id(
+                    self.get_resource_group()?,
+                    self.get_containerapps_environment_name()?,
+                )?;
         }
         if self.containerapps_environment_resource_id.is_none() {
             self.containerapps_environment_resource_id = Some(deploy_containerapps_env(
