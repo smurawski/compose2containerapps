@@ -65,16 +65,15 @@ impl RetrieveLogsCommand {
         let local_self = self.validate_before_run()?;
         let mut result =
             get_az_monitor_logs(&local_self.log_analytics_client_id, &local_self.name)?;
-        if result.len() > 0 {
+        if !result.is_empty() {
             println!("Timestamp:                Logs:");
-        
+
             result.sort();
             result
                 .iter()
                 .map(|l| println!("{}: {}", l.time_generated, l.log))
                 .for_each(drop);
-        }
-        else {
+        } else {
             eprintln!("No logs available in the target workspace.");
         }
         Ok(())
