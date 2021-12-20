@@ -27,42 +27,44 @@ The application has three mandatory parameters and two optional ones (that have 
 `compose2containerapp --help`
 
 ```
-compose2containerapps v0.5.0
+compose2containerapps v0.6.0
 Steven Murawski <steven.murawski@microsoft.com>
 Converts Docker Compose files to Azure ContainerApps yaml configuration files
 
 USAGE:
-    compose2containerapp.exe [FLAGS] [ARGS] [SUBCOMMAND]
+    compose2containerapp.exe [SUBCOMMAND]
 
 FLAGS:
     -h, --help       Prints help information
     -V, --version    Prints version information
-    -v, --verbose    Enable verbose output.
-
-ARGS:
-    <INPUT>     Path to read the Docker Compose yaml configuration file. [default: ./docker-compose.yml]
-    <OUTPUT>    Base file name to write the Azure ContainerApps yaml configuration files.  Output file name will be
-                prefixed with the service name. [default: containerapps.yml]
 
 SUBCOMMANDS:
     convert    Converts a Docker Compose file into Azure ContainerApps configurations.
     deploy     Deploys a Docker Compose file into Azure ContainerApps
     help       Prints this message or the help of the given subcommand(s)
+    logs       Retrieves Azure ContainerApps Logs
 ```
 
-`compose2containerapp convert --help`
+### Convert
 
+The `convert` subcommand takes a Docker Compose file and translates it into a [YAML configuration file for Azure ContainerApps](https://aka.ms/containerapps/spec).
+
+
+This YAML file can be deployed with `az containerapp create --name YOURCONTAINERAPPNAME --yaml ./path/to/configuration.yaml`.
+
+`compose2containerapp convert --help`
 
 ```
 compose2containerapp.exe-convert
 Converts a Docker Compose file into Azure ContainerApps configurations.
 
 USAGE:
-    compose2containerapp.exe convert [OPTIONS]
+    compose2containerapp.exe convert [FLAGS] [OPTIONS] [ARGS]
 
 FLAGS:
     -h, --help       Prints help information
     -V, --version    Prints version information
+    -v, --verbose    Enable verbose output.
 
 OPTIONS:
     -i, --containerapps-environment-id <kubeEnvironmentId>
@@ -76,7 +78,19 @@ OPTIONS:
 
         --transport <transport>
             ContainerApps transport. [possible values: Auto, Http, Http2]
+
+
+ARGS:
+    <INPUT>     Path to read the Docker Compose yaml configuration file. [default: ./docker-compose.yml]
+    <OUTPUT>    Base file name to write the Azure ContainerApps yaml configuration files.  Output file name will be
+                prefixed with the service name. [default: containerapps.yml]
 ```
+
+### Deploy
+
+The `deploy` subcommand will take a Docker Compose file and iterate over the services defined, converting them to supported ContainerApps configurations and deploying them to Azure.
+
+If an existing Azure ContainerApps environment is not present, it will create and configure the dependencies in the targeted resource group.
 
 `compose2containerapp deploy --help`
 
@@ -85,15 +99,19 @@ compose2containerapp.exe-deploy
 Deploys a Docker Compose file into Azure ContainerApps
 
 USAGE:
-    compose2containerapp.exe deploy [OPTIONS]
+    compose2containerapp.exe deploy [FLAGS] [OPTIONS] [ARGS]
 
 FLAGS:
     -h, --help       Prints help information
     -V, --version    Prints version information
+    -v, --verbose    Enable verbose output.
 
 OPTIONS:
     -i, --containerapps-environment-id <kubeEnvironmentId>
             Resource ID for the ContainerApps environment. [env: CONTAINERAPPS_ENVIRONMENT_ID=]
+
+    -n, --containerapps-environment-name <kubeEnvironmentName>
+            Resource Name for the ContainerApps environment. [env: CONTAINERAPPS_ENVIRONMENT=]
 
     -l, --location <location>
             Resource group location for the ContainerApps environment. [env: LOCATION=]  [possible values: eastus,
@@ -107,7 +125,9 @@ OPTIONS:
         --transport <transport>
             ContainerApps transport. [possible values: Auto, Http, Http2]
 
+
+ARGS:
+    <INPUT>     Path to read the Docker Compose yaml configuration file. [default: ./docker-compose.yml]
+    <OUTPUT>    Base file name to write the Azure ContainerApps yaml configuration files.  Output file name will be
+                prefixed with the service name. [default: containerapps.yml]
 ```
-
-
-![Running the app](https://github.com/smurawski/compose2containerapps/raw/main/compose2containerapps.gif)
