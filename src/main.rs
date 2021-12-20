@@ -69,5 +69,11 @@ fn main() -> Result<()> {
             .for_each(drop);
     }
 
+    if let Some(matches) = main_matches.subcommand_matches("logs") {
+        RetrieveLogsCommand::default()
+            .with_log_analytics_workspace_id(matches.value_of("log_analytics_workspace_id"))
+
+    }
+
     Ok(())
 }
