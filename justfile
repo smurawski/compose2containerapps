@@ -22,7 +22,7 @@ run action *FLAGS: _build-bicep
 
 logs *FLAGS: (run "logs" FLAGS)
 
-convert *FLAGS: (run "convert" {{FLAGS}})
+convert *FLAGS: (run "convert" FLAGS)
 
 @convert-default:
     just --dotenv-path test/default_convert/convert.env convert test/default_convert/docker-compose.yml

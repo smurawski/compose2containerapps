@@ -8,7 +8,13 @@ This is a proof of concept to take Docker Compose files ([following the spec](ht
 
 If you have [the `just` task runner](https://github.com/casey/just), then you can run the example conversions from the `/test/` directory with:
 
+*This assumes that PowerShell Core or PowerShell 7 is available.*
+
 `just demo-convert`
+
+*To run it with bash*
+
+`just --shell sh --shell-arg "-cu" demo-convert`
 
 ## Work To Be Done
 
