@@ -59,6 +59,8 @@ fn logs_subcommand<'a, 'b>() -> App<'a, 'b> {
         .arg(containerapps_environment_id_arg())
         .arg(containerapps_environment_name_arg())
         .arg(resource_group_name_arg())
+        .arg(max_records_arg())
+        .arg(containerapps_name_arg())
 }
 
 fn standard_args<'a, 'b>() -> Vec<Arg<'a, 'b>> {
@@ -72,16 +74,11 @@ fn standard_args<'a, 'b>() -> Vec<Arg<'a, 'b>> {
                 .help("Base file name to write the Azure ContainerApps yaml configuration files.  Output file name will be prefixed with the service name.")
                 .index(2)
                 .default_value("containerapps.yml"),
-
-        Arg::with_name("verbose")
-            .long("verbose")
-            .short("v")
-            .help("Enable verbose output."),
     )
 }
 
 fn containerapps_environment_name_arg<'a, 'b>() -> Arg<'a, 'b> {
-    Arg::with_name("kubeEnvironmentName")
+    Arg::with_name("ContainerAppsEnvironmentName")
         .long("containerapps-environment-name")
         .short("n")
         .help("Resource Name for the ContainerApps environment.")
@@ -90,7 +87,7 @@ fn containerapps_environment_name_arg<'a, 'b>() -> Arg<'a, 'b> {
 }
 
 fn containerapps_environment_id_arg<'a, 'b>() -> Arg<'a, 'b> {
-    Arg::with_name("kubeEnvironmentId")
+    Arg::with_name("ContainerAppsEnvironmentId")
         .long("containerapps-environment-id")
         .short("i")
         .help("Resource ID for the ContainerApps environment.")
@@ -115,7 +112,7 @@ fn containerapps_environment_client_id_arg<'a, 'b>() -> Arg<'a, 'b> {
 }
 
 fn resource_group_name_arg<'a, 'b>() -> Arg<'a, 'b> {
-    Arg::with_name("resourceGroup")
+    Arg::with_name("ResourceGroup")
         .long("resource-group")
         .short("g")
         .help("Resource Group for the ContainerApps environment.")
@@ -125,7 +122,7 @@ fn resource_group_name_arg<'a, 'b>() -> Arg<'a, 'b> {
 }
 
 fn location_arg<'a, 'b>() -> Arg<'a, 'b> {
-    Arg::with_name("location")
+    Arg::with_name("Location")
         .long("location")
         .short("l")
         .help("Resource group location for the ContainerApps environment.")
@@ -135,7 +132,7 @@ fn location_arg<'a, 'b>() -> Arg<'a, 'b> {
 }
 
 fn subscription_name_arg<'a, 'b>() -> Arg<'a, 'b> {
-    Arg::with_name("subscription_name")
+    Arg::with_name("SubscriptionName")
         .long("subscription-name")
         .help("Resource group location for the ContainerApps environment.")
         .takes_value(true)
@@ -143,9 +140,25 @@ fn subscription_name_arg<'a, 'b>() -> Arg<'a, 'b> {
 }
 
 fn transport_arg<'a, 'b>() -> Arg<'a, 'b> {
-    Arg::with_name("transport")
+    Arg::with_name("Transport")
         .long("transport")
         .help("ContainerApps transport.")
         .takes_value(true)
         .possible_values(&Transport::variants())
+}
+
+fn max_records_arg<'a, 'b>() -> Arg<'a, 'b> {
+    Arg::with_name("NumberOfResults")
+        .long("number-of-results")
+        .help("Number of records to return.")
+        .takes_value(true)
+        .aliases(&["max-records", "max-results"])
+        .default_value("100")
+}
+
+fn containerapps_name_arg<'a, 'b>() -> Arg<'a, 'b> {
+    Arg::with_name("ContainerAppName")
+        .long("name")
+        .help("Name of the ContainerApp to retrive logs for.")
+        .takes_value(true)
 }

@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.4.1008.15138",
-      "templateHash": "5167684908790770048"
+      "version": "0.4.1124.51302",
+      "templateHash": "12226703901532944854"
     }
   },
   "parameters": {
@@ -37,7 +37,6 @@
       }
     }
   },
-  "functions": [],
   "resources": [
     {
       "type": "Microsoft.Resources/resourceGroups",
@@ -47,7 +46,7 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-06-01",
+      "apiVersion": "2020-10-01",
       "name": "logAnalyticsWorkspace",
       "resourceGroup": "[parameters('rgName')]",
       "properties": {
@@ -66,8 +65,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.4.1008.15138",
-              "templateHash": "9233389467681148214"
+              "version": "0.4.1124.51302",
+              "templateHash": "15587621415674574085"
             }
           },
           "parameters": {
@@ -79,7 +78,6 @@
               "type": "string"
             }
           },
-          "functions": [],
           "resources": [
             {
               "type": "Microsoft.OperationalInsights/workspaces",
@@ -119,7 +117,7 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-06-01",
+      "apiVersion": "2020-10-01",
       "name": "[parameters('name')]",
       "resourceGroup": "[parameters('rgName')]",
       "properties": {
@@ -132,10 +130,10 @@
             "value": "[parameters('name')]"
           },
           "workspaceClientId": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'logAnalyticsWorkspace'), '2020-06-01').outputs.clientId.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'logAnalyticsWorkspace'), '2020-10-01').outputs.clientId.value]"
           },
           "workspaceClientSecret": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'logAnalyticsWorkspace'), '2020-06-01').outputs.clientSecret.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'logAnalyticsWorkspace'), '2020-10-01').outputs.clientSecret.value]"
           }
         },
         "template": {
@@ -144,8 +142,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.4.1008.15138",
-              "templateHash": "8934979462652880989"
+              "version": "0.4.1124.51302",
+              "templateHash": "1233353782356651087"
             }
           },
           "parameters": {
@@ -163,7 +161,6 @@
               "type": "string"
             }
           },
-          "functions": [],
           "resources": [
             {
               "type": "Microsoft.Web/kubeEnvironments",
@@ -200,7 +197,7 @@
   "outputs": {
     "containerappEnvId": {
       "type": "string",
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', parameters('name')), '2020-06-01').outputs.id.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', parameters('name')), '2020-10-01').outputs.id.value]"
     }
   }
 }

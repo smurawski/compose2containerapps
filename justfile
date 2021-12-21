@@ -25,7 +25,7 @@ test:
 run action *FLAGS: build-bicep
     cargo run -- {{action}} {{FLAGS}}
 
-run-logs: (run "logs")
+run-logs *FLAGS: (run "logs" FLAGS)
 
 run-hollan: (run "./test/jeff-hollan-compose.yml" "deploy" "--transport Http2") 
 
@@ -49,4 +49,9 @@ setup-az-containerapp-cli:
 get-environment:
     -az containerapp env show --resource-group $env:RESOURCE_GROUP --name $env:CONTAINERAPPS_ENVIRONMENT_NAME
 
+help: 
+    cargo run -- --help
+    cargo run -- convert --help
+    cargo run -- deploy --help
+    cargo run -- logs --help
     

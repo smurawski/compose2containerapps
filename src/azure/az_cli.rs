@@ -172,14 +172,20 @@ pub struct AzMonitorLog {
 pub fn get_az_monitor_logs(
     client_id: &str,
     service_name: &Option<String>,
+    max_results: &Option<u32>,
 ) -> Result<Vec<AzMonitorLog>> {
     let mut query = String::new();
     query.push_str("ContainerAppConsoleLogs_CL");
     query.push_str(" | project ContainerAppName=ContainerAppName_s, Log=Log_s, TimeGenerated");
     if let Some(name) = service_name {
-        query.push_str(" | where ContainerAppName == ");
-        query.push_str(name);
+        let name_filter = format!(" | where ContainerAppName == \"{}\"", name);
+        query.push_str(&name_filter);
     }
+    query.push_str(" | order by TimeGenerated desc nulls last");
+    if let Some(u) = max_results {
+        let max_filter = format!(" | take {}", u);
+        query.push_str(&max_filter);
+    };
     let args = vec![
         "monitor",
         "log-analytics",
