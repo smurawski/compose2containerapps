@@ -1,0 +1,32 @@
+---
+kind: containerapp
+location: eastus
+name: ghost
+resourceGroup: academo
+type: Microsoft.Web/containerApps
+properties:
+  kubeEnvironmentId: /subscriptions/mysubscription/resourceGroups/myresourcegroup/providers/Microsoft.Web/kubeEnvironments/myenvironment
+  configuration:
+    activeRevisionsMode: single
+    ingress:
+      external: true
+      allowInsecure: false
+      targetPort: 2368
+      transport: auto
+  template:
+    containers:
+      - image: "jldeen/ghost:latest"
+        name: ghost
+        env:
+          - name: database__client
+            value: mysql
+          - name: database__connection__database
+            value: ghost
+          - name: database__connection__host
+            value: db
+          - name: database__connection__password
+            value: superseekretpassword
+          - name: database__connection__user
+            value: root
+    scale:
+      minReplicas: 1

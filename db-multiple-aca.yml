@@ -1,0 +1,30 @@
+---
+kind: containerapp
+location: eastus
+name: db
+resourceGroup: academo
+type: Microsoft.Web/containerApps
+properties:
+  kubeEnvironmentId: /subscriptions/mysubscription/resourceGroups/myresourcegroup/providers/Microsoft.Web/kubeEnvironments/myenvironment
+  configuration:
+    activeRevisionsMode: single
+    ingress:
+      external: false
+      allowInsecure: false
+      targetPort: 3306
+      transport: auto
+  template:
+    containers:
+      - image: "mysql:5.7"
+        name: db
+        env:
+          - name: MYSQL_DATABASE
+            value: ghost
+          - name: MYSQL_PASSWORD
+            value: lessseekretpassword
+          - name: MYSQL_ROOT_PASSWORD
+            value: superseekretpassword
+          - name: MYSQL_USER
+            value: ghost
+    scale:
+      minReplicas: 1

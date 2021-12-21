@@ -1,0 +1,21 @@
+---
+kind: containerapp
+location: eastus
+name: backend
+resourceGroup: hollandemo
+type: Microsoft.Web/containerApps
+properties:
+  kubeEnvironmentId: /subscriptions/mysubscription/resourceGroups/hollandemo/providers/Microsoft.Web/kubeEnvironments/acahollandemo
+  configuration:
+    activeRevisionsMode: single
+    ingress:
+      external: false
+      allowInsecure: false
+      targetPort: 50051
+      transport: auto
+  template:
+    containers:
+      - image: "ghcr.io/jeffhollan/grpc-sample-go/grpc-backend:main"
+        name: backend
+    scale:
+      minReplicas: 1

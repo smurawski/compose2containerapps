@@ -4,6 +4,12 @@
 
 This is a proof of concept to take Docker Compose files ([following the spec](https://github.com/compose-spec/compose-spec/blob/master/spec.md)) and converting them to YAML files that can be used to deploy [Azure ContainerApps](https://docs.microsoft.com/azure/container-apps?WT.mc_id=containers-52416-stmuraws) services.
 
+## Try it
+
+If you have [the `just` task runner](https://github.com/casey/just), then you can run the example conversions from the `/test/` directory with:
+
+`just demo-convert`
+
 ## Work To Be Done
 
 There are lots of things that the Compose file can express that are not supported.  We should add some warnings about those configuration elements that are not going to be represented - things like volume mounts, network configurations, etc..

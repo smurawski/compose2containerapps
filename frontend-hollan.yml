@@ -1,0 +1,24 @@
+---
+kind: containerapp
+location: eastus
+name: frontend
+resourceGroup: hollandemo
+type: Microsoft.Web/containerApps
+properties:
+  kubeEnvironmentId: /subscriptions/mysubscription/resourceGroups/hollandemo/providers/Microsoft.Web/kubeEnvironments/acahollandemo
+  configuration:
+    activeRevisionsMode: single
+    ingress:
+      external: true
+      allowInsecure: false
+      targetPort: 8050
+      transport: auto
+  template:
+    containers:
+      - image: "ghcr.io/jeffhollan/grpc-sample-go/https-frontend:main"
+        name: frontend
+        env:
+          - name: GRPC_SERVER_ADDRESS
+            value: "this_would_be_generated_if_deployed.com:443"
+    scale:
+      minReplicas: 1
