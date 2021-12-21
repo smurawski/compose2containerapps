@@ -2,6 +2,7 @@ use crate::azure::*;
 use anyhow::Result;
 use dialoguer::Input;
 use log::{debug, trace};
+use std::str::FromStr;
 
 #[derive(Default)]
 pub struct RetrieveLogsCommand {
@@ -10,6 +11,7 @@ pub struct RetrieveLogsCommand {
     name: Option<String>,
     containerapps_environment_name: Option<String>,
     containerapps_environment_resource_id: Option<String>,
+    max_results: Option<u32>,
 }
 
 impl RetrieveLogsCommand {
@@ -33,6 +35,16 @@ impl RetrieveLogsCommand {
         } else {
             self.name = None;
         }
+        self
+    }
+
+    pub fn with_max_results(mut self, max_results: Option<&str>) -> Self {
+        if let Some(v) = max_results {
+            self.max_results = match u32::from_str(v) {
+                Ok(u) => Some(u),
+                Err(_) => None,
+            };
+        };
         self
     }
 
@@ -63,15 +75,18 @@ impl RetrieveLogsCommand {
     pub fn run(self) -> Result<()> {
         trace!("Starting to retrieve logs.");
         let local_self = self.validate_before_run()?;
-        let mut result =
-            get_az_monitor_logs(&local_self.log_analytics_client_id, &local_self.name)?;
+        let mut result = get_az_monitor_logs(
+            &local_self.log_analytics_client_id,
+            &local_self.name,
+            &local_self.max_results,
+        )?;
         if !result.is_empty() {
-            println!("Timestamp:                Logs:");
+            println!("Timestamp:                ContainerAppName \\ Logs:");
 
             result.sort();
             result
                 .iter()
-                .map(|l| println!("{}: {}", l.time_generated, l.log))
+                .map(|l| println!("{}: {} \\ {}", l.time_generated, l.containerapp_name, l.log))
                 .for_each(drop);
         } else {
             eprintln!("No logs available in the target workspace.");

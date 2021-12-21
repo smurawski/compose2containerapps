@@ -2,7 +2,7 @@
 
 # Compose2ContainerApps
 
-This is a proof of concept to take Docker Compose files ([following the spec](https://github.com/compose-spec/compose-spec/blob/master/spec.md)) and converting them to YAML files that can be used to deploy [Azure ContainerApps](https://docs.microsoft.com/azure/container-apps?WT.mc_id?containers-52416-stmuraws) services.
+This is a proof of concept to take Docker Compose files ([following the spec](https://github.com/compose-spec/compose-spec/blob/master/spec.md)) and converting them to YAML files that can be used to deploy [Azure ContainerApps](https://docs.microsoft.com/azure/container-apps?WT.mc_id=containers-52416-stmuraws) services.
 
 ## Work To Be Done
 
@@ -27,7 +27,7 @@ The application has three mandatory parameters and two optional ones (that have 
 `compose2containerapp --help`
 
 ```
-compose2containerapps v0.6.0
+compose2containerapps v0.6.1
 Steven Murawski <steven.murawski@microsoft.com>
 Converts Docker Compose files to Azure ContainerApps yaml configuration files
 
@@ -59,24 +59,23 @@ compose2containerapp.exe-convert
 Converts a Docker Compose file into Azure ContainerApps configurations.
 
 USAGE:
-    compose2containerapp.exe convert [FLAGS] [OPTIONS] [ARGS]
+    compose2containerapp.exe convert [OPTIONS] [ARGS]
 
 FLAGS:
     -h, --help       Prints help information
     -V, --version    Prints version information
-    -v, --verbose    Enable verbose output.
 
 OPTIONS:
-    -i, --containerapps-environment-id <kubeEnvironmentId>
-            Resource ID for the ContainerApps environment. [env: CONTAINERAPPS_ENVIRONMENT_ID=]
-
-    -l, --location <location>
-            Resource group location for the ContainerApps environment. [env: LOCATION=]  [possible values: eastus,
+    -i, --containerapps-environment-id <ContainerAppsEnvironmentId>
+            Resource ID for the ContainerApps environment. [env:
+            CONTAINERAPPS_ENVIRONMENT_ID=/subscriptions/mysubscription/resourceGroups/myresourcegroup/providers/Microsoft.Web/kubeEnvironments/myenvironment]
+    -l, --location <Location>
+            Resource group location for the ContainerApps environment. [env: LOCATION=eastus]  [possible values: eastus,
             westus, centralus]
-    -g, --resource-group <resourceGroup>
-            Resource Group for the ContainerApps environment. [env: RESOURCE_GROUP=]
+    -g, --resource-group <ResourceGroup>
+            Resource Group for the ContainerApps environment. [env: RESOURCE_GROUP=hollan_test]
 
-        --transport <transport>
+        --transport <Transport>
             ContainerApps transport. [possible values: Auto, Http, Http2]
 
 
@@ -99,30 +98,29 @@ compose2containerapp.exe-deploy
 Deploys a Docker Compose file into Azure ContainerApps
 
 USAGE:
-    compose2containerapp.exe deploy [FLAGS] [OPTIONS] [ARGS]
+    compose2containerapp.exe deploy [OPTIONS] [ARGS]
 
 FLAGS:
     -h, --help       Prints help information
     -V, --version    Prints version information
-    -v, --verbose    Enable verbose output.
 
 OPTIONS:
-    -i, --containerapps-environment-id <kubeEnvironmentId>
-            Resource ID for the ContainerApps environment. [env: CONTAINERAPPS_ENVIRONMENT_ID=]
+    -i, --containerapps-environment-id <ContainerAppsEnvironmentId>
+            Resource ID for the ContainerApps environment. [env:
+            CONTAINERAPPS_ENVIRONMENT_ID=/subscriptions/mysubscription/resourceGroups/myresourcegroup/providers/Microsoft.Web/kubeEnvironments/myenvironment]
+    -n, --containerapps-environment-name <ContainerAppsEnvironmentName>
+            Resource Name for the ContainerApps environment. [env: CONTAINERAPPS_ENVIRONMENT=hollantest]
 
-    -n, --containerapps-environment-name <kubeEnvironmentName>
-            Resource Name for the ContainerApps environment. [env: CONTAINERAPPS_ENVIRONMENT=]
-
-    -l, --location <location>
-            Resource group location for the ContainerApps environment. [env: LOCATION=]  [possible values: eastus,
+    -l, --location <Location>
+            Resource group location for the ContainerApps environment. [env: LOCATION=eastus]  [possible values: eastus,
             westus, centralus]
-    -g, --resource-group <resourceGroup>
-            Resource Group for the ContainerApps environment. [env: RESOURCE_GROUP=]
+    -g, --resource-group <ResourceGroup>
+            Resource Group for the ContainerApps environment. [env: RESOURCE_GROUP=hollan_test]
 
-        --subscription-name <subscription_name>
-            Resource group location for the ContainerApps environment. [env: AZURE_SUBSCRIPTION_NAME=]
-
-        --transport <transport>
+        --subscription-name <SubscriptionName>
+            Resource group location for the ContainerApps environment. [env: AZURE_SUBSCRIPTION_NAME=ca-stmuraws-demo-
+            test]
+        --transport <Transport>
             ContainerApps transport. [possible values: Auto, Http, Http2]
 
 
@@ -130,4 +128,38 @@ ARGS:
     <INPUT>     Path to read the Docker Compose yaml configuration file. [default: ./docker-compose.yml]
     <OUTPUT>    Base file name to write the Azure ContainerApps yaml configuration files.  Output file name will be
                 prefixed with the service name. [default: containerapps.yml]
+```
+
+### Logs
+
+The `logs` subcommand helps retrieve [logs from Azure Container Apps](https://docs.microsoft.com/azure/container-apps/monitor?tabs=bash&WT.mc_id=containers-52416-stmuraws). The logs are kept in Azure Log Analytics.  This command simplifies what you need to know to retrieve the logs.
+
+`compose2containerapp logs --help`
+
+```
+compose2containerapp.exe-logs
+Retrieves Azure ContainerApps Logs
+
+USAGE:
+    compose2containerapp.exe logs [OPTIONS]
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+        --name <ContainerAppName>                                          Name of the ContainerApp to retrive logs for.
+    -i, --containerapps-environment-id <ContainerAppsEnvironmentId>
+            Resource ID for the ContainerApps environment. [env:
+            CONTAINERAPPS_ENVIRONMENT_ID=/subscriptions/mysubscription/resourceGroups/myresourcegroup/providers/Microsoft.Web/kubeEnvironments/myenvironment]
+    -n, --containerapps-environment-name <ContainerAppsEnvironmentName>
+            Resource Name for the ContainerApps environment. [env: CONTAINERAPPS_ENVIRONMENT=hollantest]
+
+        --number-of-results <NumberOfResults>                              Number of records to return. [default: 100]
+    -g, --resource-group <ResourceGroup>
+            Resource Group for the ContainerApps environment. [env: RESOURCE_GROUP=hollan_test]
+
+    -c, --log-analtyics-client-id <log_analytics_client_id>
+            Resource ID for the ContainerApps environment. [env: LOG_ANALYTICS_WORKSPACE_CLIENT_ID=]
+
 ```

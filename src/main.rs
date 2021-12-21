@@ -31,21 +31,23 @@ fn main() -> Result<()> {
         ConvertComposeCommand::default()
             .with_compose_path(matches.value_of("INPUT").unwrap())
             .with_containerapps_path(matches.value_of("OUTPUT").unwrap())
-            .with_resource_group(matches.value_of("resourceGroup"))
-            .with_location(matches.value_of("location"))
-            .with_containerapps_environment_id(matches.value_of("kubeEnvironmentId"))
-            .with_transport(matches.value_of("transport"))
+            .with_resource_group(matches.value_of("ResourceGroup"))
+            .with_location(matches.value_of("Location"))
+            .with_containerapps_environment_id(matches.value_of("ContainerAppsEnvironmentId"))
+            .with_transport(matches.value_of("Transport"))
             .convert()?
             .write()?;
     };
 
     if let Some(matches) = main_matches.subcommand_matches("deploy") {
         let containerapps_environment_id = ValidateAzureCommand::default()
-            .with_subscription_name(matches.value_of("subscription_name"))
-            .with_resource_group(matches.value_of("resourceGroup"))
-            .with_containerapps_environment_name(matches.value_of("kubeEnvironmentName"))
-            .with_containerapps_environment_resource_id(matches.value_of("kubeEnvironmentId"))
-            .with_location(matches.value_of("location"))
+            .with_subscription_name(matches.value_of("SubscriptionName"))
+            .with_resource_group(matches.value_of("ResourceGroup"))
+            .with_containerapps_environment_name(matches.value_of("ContainerAppsEnvironmentName"))
+            .with_containerapps_environment_resource_id(
+                matches.value_of("ContainerAppsEnvironmentId"),
+            )
+            .with_location(matches.value_of("Location"))
             .validate_azure_login()?
             .retrieve_containerapps_environment()?
             .containerapps_environment_id()?;
@@ -53,10 +55,10 @@ fn main() -> Result<()> {
         ConvertComposeCommand::default()
             .with_compose_path(matches.value_of("INPUT").unwrap())
             .with_containerapps_path(matches.value_of("OUTPUT").unwrap())
-            .with_resource_group(matches.value_of("resourceGroup"))
-            .with_location(matches.value_of("location"))
+            .with_resource_group(matches.value_of("ResourceGroup"))
+            .with_location(matches.value_of("Location"))
             .with_containerapps_environment_id(Some(&containerapps_environment_id))
-            .with_transport(matches.value_of("transport"))
+            .with_transport(matches.value_of("Transport"))
             .with_deploy_azure(true)
             .convert()?
             .get_configurations()
@@ -70,10 +72,13 @@ fn main() -> Result<()> {
     if let Some(matches) = main_matches.subcommand_matches("logs") {
         RetrieveLogsCommand::default()
             .with_log_analytics_client_id(matches.value_of("log_analytics_client_id"))
-            .with_resource_group(matches.value_of("resourceGroup"))
-            .with_name(matches.value_of("containerapp_name"))
-            .with_containerapps_environment_name(matches.value_of("kubeEnvironmentName"))
-            .with_containerapps_environment_resource_id(matches.value_of("kubeEnvironmentId"))
+            .with_resource_group(matches.value_of("ResourceGroup"))
+            .with_name(matches.value_of("ContainerAppName"))
+            .with_containerapps_environment_name(matches.value_of("ContainerAppsEnvironmentName"))
+            .with_containerapps_environment_resource_id(
+                matches.value_of("ContainerAppsEnvironmentId"),
+            )
+            .with_max_results(matches.value_of("NumberOfResults"))
             .run()?;
     }
 
